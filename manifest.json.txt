@@ -1,0 +1,28 @@
+{
+  "name": "ENIGMA — Global Chat",
+  "short_name": "ENIGMA",
+  "description": "Where the World Connects — Free Global Chat & Community",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#05050f",
+  "theme_color": "#a855f7",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["social", "communication", "chat"],
+  "lang": "en",
+  "author": "ENIGMA Network"
+}
