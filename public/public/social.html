@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ENIGMA — Social • Stories • Live • Creator Hub</title>
+  
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css" />
+  
+  <style>
+    :root {
+      --neon-purple: #a855f7;
+      --neon-pink: #ec4899;
+      --neon-cyan: #22d3ee;
+      --neon-green: #56ef83;
+      --bg-dark: #050512;
+      --card-bg: rgba(15, 15, 35, 0.85);
+    }
+    
+    body { background: var(--bg-dark); color: #e5e5e7; padding-bottom: 80px; }
+    .header-bar {
+      position: sticky; top: 0; z-index: 100;
+      padding: 12px 16px;
+      background: linear-gradient(180deg, rgba(10,10,30,0.98), transparent);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .header-bar h1 { font-size: 20px; background: linear-gradient(90deg, var(--neon-purple), var(--neon-pink)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    
+    .tabs { display: flex; overflow-x: auto; gap: 8px; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .tab {
+      padding: 8px 16px; border-radius: 20px; white-space: nowrap; cursor: pointer;
+      background: rgba(255,255,255,0.05); border: none; color: #b0b0c0;
+      transition: all 0.25s ease;
+    }
+    .tab.active {
+      background: linear-gradient(90deg, var(--neon-purple), var(--neon-pink));
+      color: white; font-weight: 600; box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+    }
+    
+    .stories-bar { display: flex; gap: 12px; padding: 16px; overflow-x: auto; }
+    .story-ring {
+      width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(45deg, var(--neon-pink), var(--neon-purple), var(--neon-cyan));
+      padding: 3px; cursor: pointer; flex-shrink: 0;
+    }
+    .story-inner {
+      width: 64px; height: 64px; border-radius: 50%; background: #1a1a3a; display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+    }
+    .story-add { background: rgba(255,255,255,0.1); border: 2px dashed rgba(255,255,255,0.3); }
+    
+    .post-card {
+      background: var(--card-bg); border-radius: 16px; margin: 16px; overflow: hidden;
+      border: 1px solid rgba(168, 85, 247, 0.15); backdrop-filter: blur(10px);
+    }
+    .post-header { display: flex; align-items: center; gap: 10px; padding: 12px; }
+    .post-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink)); display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    .post-media { width: 100%; aspect-ratio: 4/5; background: linear-gradient(135deg, #1a1a3a, #2e1065); display: flex; align-items: center; justify-content: center; font-size: 40px; }
+    .post-actions { display: flex; gap: 16px; padding: 10px 14px; font-size: 22px; }
+    .action-btn { cursor: pointer; transition: transform 0.2s; }
+    .action-btn:hover { transform: scale(1.2); }
+    .action-btn.liked { color: #ef4444; }
+    .post-meta { padding: 0 14px 12px; }
+    .earn-tag {
+      display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: 6px;
+      background: rgba(86, 239, 131, 0.15); color: var(--neon-green);
+    }
+    
+    .live-badge {
+      position: absolute; top: 10px; left: 10px; background: #ef4444; color: white;
+      padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0%{opacity:1} 50%{opacity:0.5} 100%{opacity:1} }
+    
+    .creator-card {
+      background: var(--card-bg); border-radius: 12px; margin: 8px 16px; padding: 14px;
+      border: 1px solid rgba(34, 211, 238, 0.2);
+    }
+    .vip-badge {
+      background: linear-gradient(90deg, #f59e0b, #eab308); color: #000;
+      padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold;
+    }
+    
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; background: rgba(8, 8, 20, 0.95);
+      display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .nav-item { text-align: center; font-size: 20px; color: #888; cursor: pointer; }
+    .nav-item.active { color: var(--neon-purple); }
+    .fab-button {
+      position: fixed; bottom: 80px; right: 20px; width: 56px; height: 56px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink)); border: none; color: white; font-size: 28px;
+      cursor: pointer; box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header-bar">
+  <h1>✨ ENIGMA Social</h1>
+  <span id="userBalance" style="font-size:14px; color:var(--neon-green)">💰 -- Moola</span>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab active" data-tab="feed">📰 Feed</button>
+  <button class="tab" data-tab="stories">📸 Stories</button>
+  <button class="tab" data-tab="live">🔴 Live</button>
+  <button class="tab" data-tab="creators">⭐ Creators</button>
+  <button class="tab" data-tab="karaoke">🎤 Karaoke</button>
+  <button class="tab" data-tab="earn">💎 Earn</button>
+</div>
+
+<!-- Stories Row -->
+<div class="stories-bar">
+  <div class="story-ring" onclick="openStoryUpload()">
+    <div class="story-inner story-add">+</div>
+  </div>
+  <div class="story-ring" onclick="viewStory('User_Starlight')">
+    <div class="story-inner">🌟</div>
+  </div>
+  <div class="story-ring" onclick="viewStory('Music_Melody')">
+    <div class="story-inner">🎵</div>
+  </div>
+  <div class="story-ring" onclick="viewStory('CapeTown_Life')">
+    <div class="story-inner">🏙️</div>
+  </div>
+  <div class="story-ring" onclick="viewStory('Global_Explorer')">
+    <div class="story-inner">🌍</div>
+  </div>
+  <div class="story-ring" onclick="viewStory('Tech_Enigma')">
+    <div class="story-inner">💻</div>
+  </div>
+</div>
+
+<!-- Feed Content -->
+<div id="contentArea">
+  <!-- Post 1 - Live -->
+  <div class="post-card">
+    <div class="post-header">
+      <div class="post-avatar">🎤</div>
+      <div>
+        <div style="font-weight:600">KaraokéQueen_ZA <span class="vip-badge">VIP</span></div>
+        <div style="font-size:12px; color:#888">Live now — Johannesburg</div>
+      </div>
+    </div>
+    <div class="post-media" style="position:relative; background:linear-gradient(135deg,#4a0e4e,#1e1b4b)">
+      <span style="font-size:50px">🎤</span>
+      <div class="live-badge">🔴 LIVE • 1.2K watching</div>
+    </div>
+    <div class="post-actions">
+      <span class="action-btn" onclick="toggleLike(this)">❤️</span>
+      <span>2.4K</span>
+      <span class="action-btn">💬</span>
+      <span>312</span>
+      <span class="action-btn" onclick="sendGift('KaraokéQueen_ZA', 10)">🎁</span>
+      <span class="action-btn" style="margin-left:auto">↗️</span>
+    </div>
+    <div class="post-meta">
+      <div style="font-size:13px; color:#888">Send a gift = Creator earns 💎 You earn XP!</div>
+    </div>
+  </div>
+
+  <!-- Post 2 - Creator -->
+  <div class="post-card">
+    <div class="post-header">
+      <div class="post-avatar">🎬</div>
+      <div>
+        <div style="font-weight:600">Enigma_Tube <span class="earn-tag">+50 Moola</span></div>
+        <div style="font-size:12px; color:#888">Video • 15 min ago</div>
+      </div>
+    </div>
+    <div class="post-media" style="background:linear-gradient(135deg,#1e3a5f,#0f766e)">
+      <span style="font-size:50px">▶️</span>
+    </div>
+    <div class="post-actions">
+      <span class="action-btn" onclick="toggleLike(this)">🤍</span>
+      <span>856</span>
+      <span class="action-btn">💬</span>
+      <span>98</span>
+      <span class="action-btn">⭐</span>
+      <span style="margin-left:auto; font-size:13px; color:var(--neon-green)">Watch to earn!</span>
+    </div>
+  </div>
+
+  <!-- Post 3 - Photo/Story -->
+  <div class="post-card">
+    <div class="post-header">
+      <div class="post-avatar">✨</div>
+      <div>
+        <div style="font-weight:600">Cape_Sunset</div>
+        <div style="font-size:12px; color:#888">Camps Bay • 2h ago</div>
+      </div>
+    </div>
+    <div class="post-media" style="background:linear-gradient(135deg,#f97316,#ec4899)">
+      <span style="font-size:50px">🌅</span>
+    </div>
+    <div class="post-actions">
+      <span class="action-btn" onclick="toggleLike(this)">🤍</span>
+      <span>1.8K</span>
+      <span class="action-btn">💬</span>
+      <span>145</span>
+      <span class="action-btn">🔖</span>
+      <span style="margin-left:auto">↗️</span>
+    </div>
+  </div>
+
+  <!-- Creator Spotlight -->
+  <div class="creator-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+      <h3 style="margin:0; font-size:15px">🌟 Top Creators — Earn Together</h3>
+      <span style="font-size:12px; color:var(--neon-cyan)">View All →</span>
+    </div>
+    <div style="display:flex; gap:12px; overflow-x:auto; padding-bottom:8px">
+      <div style="text-align:center; min-width:80px">
+        <div style="width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg,#f59e0b,#d97706); margin:0 auto 6px; display:flex; align-items:center; justify-content:center; font-size:24px">🎵</div>
+        <div style="font-size:12px">MelodyM</div>
+        <div style="font-size:10px; color:var(--neon-green)">+2.1K Moola</div>
+      </div>
+      <div style="text-align:center; min-width:80px">
+        <div style="width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg,#a855f7,#7c3aed); margin:0 auto 6px; display:flex; align-items:center; justify-content:center; font-size:24px">🎬</div>
+        <div style="font-size:12px">Visionary</div>
+        <div style="font-size:10px; color:var(--neon-green)">+1.8K Moola</div>
+      </div>
+      <div style="text-align:center; min-width:80px">
+        <div style="width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg,#22d3ee,#06b6d4); margin:0 auto 6px; display:flex; align-items:center; justify-content:center; font-size:24px">📸</div>
+        <div style="font-size:12px">LensLife</div>
+        <div style="font-size:10px; color:var(--neon-green)">+1.5K Moola</div>
+      </div>
+      <div style="text-align:center; min-width:80px">
+        <div style="width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg,#56ef83,#10b981); margin:0 auto 6px; display:flex; align-items:center; justify-content:center; font-size:24px">🏋️</div>
+        <div style="font-size:12px">GlowFit</div>
+        <div style="font-size:10px; color:var(--neon-green)">+980 Moola</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Action Button -->
+<button class="fab-button" onclick="openCreateMenu()">+</button>
+
+<!-- Bottom Nav -->
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="switchTab('feed')">🏠</div>
+  <div class="nav-item" onclick="switchTab('search')">🔍</div>
+  <div class="nav-item" onclick="switchTab('create')">➕</div>
+  <div class="nav-item" onclick="switchTab('notifications')">🔔</div>
+  <div class="nav-item" onclick="switchTab('profile')">👤</div>
+</div>
+
+<script>
+// --- Like Toggle ---
+function toggleLike(el) {
+  el.classList.toggle('liked');
+  el.textContent = el.classList.contains('liked') ? '❤️' : '🤍';
+}
+
+// --- Send Gift ---
+function sendGift(creatorName, costMoola) {
+  if (!window.Wallet) { alert('Wallet loading...'); return; }
+  const result = window.Wallet.deductMoola(costMoola, `Gift to ${creatorName}`);
+  if (result.success) {
+    alert(`🎁 Gift sent to ${creatorName}! You spent ${costMoola} Moola — they receive 💎!`);
+  } else {
+    alert(`❌ ${result.error}`);
+  }
+}
+
+// --- Story Actions ---
+function openStoryUpload() {
+  alert('📸 Upload your story — 24h visibility! Earn Moola from views! ✨');
+}
+function viewStory(username) {
+  alert(`📖 Viewing ${username}'s story — +5 Moola earned for watching! 💎`);
+  if (window.Wallet) window.Wallet.addMoola(5, `Watched ${username}'s story`);
+}
+
+// --- Create Menu ---
+function openCreateMenu() {
+  alert('✨ Create Menu:\n📸 Photo Story\n🎬 Video Post\n🔴 Go Live\n🎤 Join Karaoke\n📝 Text Post\n\nChoose your magic! 💜');
+}
+
+// --- Tab Switch ---
+function switchTab(tabName) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+// --- Update Balance Display ---
+function updateBalanceDisplay() {
+  const el = document.getElementById('userBalance');
+  if (el && window.Wallet) {
+    el.textContent = `💰 ${window.Wallet.getBalance().toLocaleString()} Moola`;
+  }
+}
+
+// --- Init ---
+window.addEventListener('load', () => {
+  setTimeout(updateBalanceDisplay, 300);
+});
+
+console.log('✨ ENIGMA Social — Loaded & Shining!');
+</script>
+
+</body>
+</html>
