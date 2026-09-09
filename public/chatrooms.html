@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ENIGMA — Global Chat 🌍</title>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <!-- Socket.IO -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css" />
+  
+  <style>
+    body {
+      background: #05050d;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .page-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .back-link {
+      color: #a855f7;
+      text-decoration: none;
+      font-size: 1.2rem;
+    }
+    .page-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      flex: 1;
+    }
+    .moola-balance {
+      background: linear-gradient(135deg, #a855f7, #ec4899);
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .category {
+      padding: 1rem 1.5rem;
+    }
+    .category-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #9ca3af;
+      margin: 1rem 0 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .room-item {
+      margin-bottom: 0.5rem;
+    }
+    .locked {
+      opacity: 0.7;
+    }
+    .lock-icon {
+      margin-left: 0.5rem;
+      font-size: 0.8rem;
+    }
+    .enter-btn {
+      margin-top: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      width: auto;
+      display: inline-block;
+    }
+    .price-tag {
+      display: inline-block;
+      margin-left: 0.5rem;
+      background: rgba(245, 158, 11, 0.2);
+      color: #f59e0b;
+      padding: 0.15rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+    }
+    .chat-screen {
+      display: none;
+      flex-direction: column;
+      height: 100vh;
+    }
+    .chat-screen.active {
+      display: flex;
+    }
+    .rooms-screen {
+      display: block;
+    }
+    .rooms-screen.hidden {
+      display: none;
+    }
+    .chat-messages {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .message-row {
+      display: flex;
+      max-width: 85%;
+    }
+    .message-row.me {
+      margin-left: auto;
+      flex-direction: row-reverse;
+    }
+    .message-bubble {
+      padding: 0.75rem 1rem;
+      border-radius: 18px;
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.2);
+      border-bottom-left-radius: 4px;
+    }
+    .message-row.me .message-bubble {
+      background: linear-gradient(135deg, #a855f7, #7c3aed);
+      border-bottom-left-radius: 18px;
+      border-bottom-right-radius: 4px;
+    }
+    .message-sender {
+      font-size: 0.7rem;
+      color: #9ca3af;
+      margin-bottom: 0.25rem;
+    }
+    .message-row.me .message-sender {
+      display: none;
+    }
+    .message-time {
+      font-size: 0.65rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+      text-align: right;
+    }
+    .chat-input-area {
+      display: flex;
+      gap: 0.5rem;
+      padding: 1rem;
+      border-top: 1px solid rgba(168, 85, 247, 0.2);
+    }
+    .chat-input-area input {
+      flex: 1;
+    }
+    .sound-toggle {
+      font-size: 0.8rem;
+      padding: 0.5rem;
+      background: transparent;
+      border: none;
+      color: #9ca3af;
+      cursor: pointer;
+    }
+    .sound-toggle.on {
+      color: #10b981;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ===== ROOMS LIST SCREEN ===== -->
+  <div id="roomsScreen" class="rooms-screen">
+    <header class="page-header">
+      <a href="index.html" class="back-link">←</a>
+      <h1 class="page-title">💬 Global Chat</h1>
+      <div class="moola-balance" id="topMoola">💰 100</div>
+    </header>
+
+    <div id="roomsContainer">
+      <!-- ===== NATIONAL — SOUTH AFRICA ===== -->
+      <div class="category">
+        <h2 class="category-title">🇿🇦 South Africa — Premium</h2>
+        
+        <div class="room-item" data-room="za-cape-town" data-price="5">
+          <div class="card" style="margin:0;">
+            <div class="room-name">🏙️ Cape Town Central</div>
+            <div class="room-desc">Western Cape — Meet locals & visitors</div>
+            <div class="room-meta">
+              <span>👥 <span class="count">12</span> online</span>
+              <span class="price-tag">5 Moola/entry</span>
+            </div>
+            <button class="btn btn-primary enter-btn" onclick="enterRoom('za-cape-town', 5)">Enter Chat</button>
+          </div>
+        </div>
+
+        <div class="room-item" data-room="za-johannesburg" data-price="5">
+          <div class="card" style="margin:0;">
+            <div class="room-name">🌆 Jozi — City of Gold</div>
+            <div class="room-desc">Gauteng — Business, youth & lifestyle</div>
+            <div class="room-meta">
+              <span>👥 <span class="count">28</span> online</span>
+              <span class="price-tag">5 Moola/entry</span>
+            </div>
+            <button class="btn btn-primary enter-btn" onclick="enterRoom('za-johannesburg', 5)">Enter Chat</button>
+          </div>
+        </div>
+
+        <div class="room-item" data-room="za-durban" data-price="5">
+          <div class="card" style="margin:0;">
+            <div class="room-name">🏖️ Durban — Coastal Vibes</div>
+            <div class="room-desc">KZN — Warmth, culture & beaches</div>
+            <div class="room-meta">
+              <span>👥 <span class="count">9</span> online</span>
+              <span class="price-tag">5 Moola/entry</span>
+            </div>
+            <button class="btn btn-primary enter-btn" onclick="enterRoom('za-durban', 5)">Enter Chat</button>
+          </div>
+        </div>
+
+        <div class="room-item" data-room="za-teens" data-price="3">
+          <div class="card" style="margin:0;">
+            <div class="room-name">✨ SA Teens (13–19)</div>
+            <div class="room-desc">Safe space — make friends your age</div>
+            <div class="room-meta">
+              <span>👥 <span class="count">45</span> online</span>
+              <span class="price-tag">3 Moola/entry</span>
+            </div>
+            <button class="btn btn-primary enter-btn" onclick="enterRoom('za-teens', 3)">Enter Chat</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== AFRICA ===== -->
+      <div class="category">
+        <h2 class="category-title">🌍 Africa — Premium</h2>
+        
+        <div class="room-item" data-room="ng-lagos" data-price="8">
+          <div class="card" style="margin:0;">
+            <div class="room-name">🇳🇬 Lagos — Africa's Pulse</div>
+            <div class="room-desc">Nigeria — Energy, music & business</div>
+            <div class="room-meta">
+              <span>👥 <span class="count">34</span> online</span>
+              <span class="price-tag">8 Moola/entry</span>
+            </div>
+            <button class="btn btn-primary enter-btn" onclick="enterRoom('ng-lagos', 8)">Enter Chat</button>
+          </div>
+        </div>
+
+        <div class="room-item" data-room="ke-nairobi" data-price="8">
+          <div class="card" style="margin:0;">
+            <div class="room-name">🇰🇪 Nairobi — Savannah Tech</div>
+            <div class="room-desc">Kenya — Innovation & connections</div>
+            <div class="room-meta">
+              <span>👥 <span class="count">15</span> online</span>
+              <span class="price-tag">8 Moola/entry</span>
+            </div>
+            <button class="btn btn-primary enter-btn" onclick="enterRoom('ke-nairobi', 8)">Enter Chat</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== INTERNATIONAL ===== -->
+      <div class="category">
+        <h2 class="category-title">🌏 Global — International Gateway</h2>
+        
+        <div class="room-item" data-room="us-global" data-price="15">
+          <div class="card" style="margin:0;">
+            <div class="room-name">🇺🇸 USA — American Dreams</div>
+            <div class="room-desc">Connect across the Atlantic</div>
+            <div class="room-meta">
+              <span>👥 <span class="count">52</span> online</span>
+              <span class="price-tag">15 Moola/entry</span>
+            </div>
+            <button class="btn btn-primary enter-btn" onclick="enterRoom('us-global', 15)">Enter Chat</button>
+          </div>
+        </div>
+
+        <div class="room-item" data-room="uk-global" data-price="15">
+          <div class="card" style="margin:0;">
+            <div class="room-name">🇬🇧 UK — Commonwealth Circle</div>
+            <div class="room-desc">London, Cape Town & beyond</div>
+            <div class="room-meta">
+              <span>👥 <span class="count">38</span> online</span>
+              <span class="price-tag">15 Moola/entry</span>
+            </div>
+            <button class="btn btn-primary enter-btn" onclick="enterRoom('uk-global', 15)">Enter Chat</button>
+          </div>
+        </div>
+
+        <div class="room-item" data-room="br-global" data-price="12">
+          <div class="card" style="margin:0;">
+            <div class="room-name">🇧🇷 Brazil — Samba Vibes</div>
+            <div class="room-desc">South America meets Africa</div>
+            <div class="room-meta">
+              <span>👥 <span class="count">21</span> online</span>
+              <span class="price-tag">12 Moola/entry</span>
+            </div>
+            <button class="btn btn-primary enter-btn" onclick="enterRoom('br-global', 12)">Enter Chat</button>
+          </div>
+        </div>
+
+        <div class="room-item" data-room="in-global" data-price="12">
+          <div class="card" style="margin:0;">
+            <div class="room-name">🇮🇳 India — Desi Connections</div>
+            <div class="room-desc">Bollywood, culture & friendship</div>
+            <div class="room-meta">
+              <span>👥 <span class="count">29</span> online</span>
+              <span class="price-tag">12 Moola/entry</span>
+            </div>
+            <button class="btn btn-primary enter-btn" onclick="enterRoom('in-global', 12)">Enter Chat</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ACTIVE CHAT SCREEN ===== -->
+  <div id="chatScreen" class="chat-screen">
+    <header class="page-header">
+      <button class="back-link" onclick="leaveChat()">←</button>
+      <h1 class="page-title" id="chatRoomName">Chat Room</h1>
+      <button class="sound-toggle" id="soundBtn" onclick="toggleSound()">🔊</button>
+    </header>
+
+    <div class="chat-messages" id="chatMessages">
+      <!-- Messages load here -->
+    </div>
+
+    <div class="chat-input-area">
+      <input type="text" id="messageInput" placeholder="Type your message..." maxlength="200" />
+      <button class="btn btn-primary" style="width:auto; padding:0.8rem 1.2rem;" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <!-- ===== SCRIPT LOGIC ===== -->
+  <script>
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAfBOVVTaZuWdlwG-Yd6vI5hOpQzmhzjXk",
+      authDomain: "enigma-42e91.firebaseapp.com",
+      databaseURL: "https://enigma-42e91-default-rtdb.firebaseio.com",
+      projectId: "enigma-42e91",
+      storageBucket: "enigma-42e91.firebasestorage.app",
+      messagingSenderId: "539411208616",
+      appId: "1:539411208616:web:16f1f466166a5a5e29e59d",
+      measurementId: "G-PN66LVMMW8"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // User State
+    let currentUser = null;
+    let currentRoom = null;
+    let currentRoomPrice = 0;
+    let userMoola = 100;
+    let soundOn = true;
+    let unsubscribe = null;
+
+    // Mxit-style message sound
+    function playMessageSound() {
+      if (!soundOn) return;
+      try {
+        const a = new AudioContext();
+        const o = a.createOscillator();
+        const g = a.createGain();
+        o.connect(g); g.connect(a.destination);
+        o.frequency.setValueAtTime(880, a.currentTime);
+        o.frequency.exponentialRampToValueAtTime(440, a.currentTime + 0.08);
+        g.gain.setValueAtTime(0.15, a.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + 0.08);
+        o.start(a.currentTime);
+        o.stop(a.currentTime + 0.08);
+      } catch(e) {}
+    }
+
+    function toggleSound() {
+      soundOn = !soundOn;
+      document.getElementById('soundBtn').textContent = soundOn ? '🔊' : '🔇';
+      document.getElementById('soundBtn').classList.toggle('on', soundOn);
+    }
+
+    // Load user from session
+    function loadUser() {
+      const saved = localStorage.getItem('enigma_user');
+      if (saved) {
+        currentUser = JSON.parse(saved);
+        userMoola = currentUser.moola || 100;
+      } else {
+        alert('Please log in first');
+        window.location.href = 'index.html';
+      }
+      updateMoolaDisplay();
+    }
+
+    function updateMoolaDisplay() {
+      const el = document.getElementById('topMoola');
+      if (el) el.textContent = `💰 ${userMoola}`;
+    }
+
+    // Deduct entry fee
+    async function deductEntryFee(roomId, amount) {
+      if (userMoola < amount) {
+        alert(`Not enough Moola! Need ${amount} — you have ${userMoola}`);
+        return false;
+      }
+      userMoola -= amount;
+      if (currentUser) {
+        currentUser.moola = userMoola;
+        localStorage.setItem('enigma_user', JSON.stringify(currentUser));
+        await db.collection('users').doc(currentUser.uid).update({ moola: userMoola });
+      }
+      updateMoolaDisplay();
+      return true;
+    }
+
+    // Enter room
+    async function enterRoom(roomId, price) {
+      if (!currentUser) {
+        alert('Please log in first');
+        window.location.href = 'index.html';
+        return;
+      }
+      if (!(await deductEntryFee(roomId, price))) return;
+
+      currentRoom = roomId;
+      currentRoomPrice = price;
+
+      // Show chat screen
+      document.getElementById('roomsScreen').classList.add('hidden');
+      document.getElementById('chatScreen').classList.add('active');
+
+      // Set room name nicely
+      const names = {
+        'za-cape-town': '🏙️ Cape Town Central',
+        'za-johannesburg': '🌆 Jozi — City of Gold',
+        'za-durban': '🏖️ Durban — Coastal Vibes',
+        'za-teens': '✨ SA Teens (13–19)',
+        'ng-lagos': '🇳🇬 Lagos — Africa\'s Pulse',
+        'ke-nairobi': '🇰🇪 Nairobi — Savannah Tech',
+        'us-global': '🇺🇸 USA — American Dreams',
+        'uk-global': '🇬🇧 UK — Commonwealth Circle',
+        'br-global': '🇧🇷 Brazil — Samba Vibes',
+        'in-global': '🇮🇳 India — Desi Connections'
+      };
+      document.getElementById('chatRoomName').textContent = names[roomId] || roomId;
+
+      // Load messages & listen
+      listenToMessages();
+    }
+
+    // Listen for new messages in real-time
+    function listenToMessages() {
+      if (!currentRoom) return;
+      
+      // Clean up old listener if any
+      if (unsubscribe) unsubscribe();
+      
+      unsubscribe = db.collection('chats')
+        .doc(currentRoom)
+        .collection('messages')
+        .orderBy('timestamp', 'asc')
+        .limitToLast(50)
+        .onSnapshot(snap => {
+          document.getElementById('chatMessages').innerHTML = '';
+          snap.docChanges().forEach(change => {
+            if (change.type === 'added') {
+              renderMessage(change.doc.data());
+              playMessageSound();
+            }
+          });
+          // Auto-scroll to bottom
+          const box = document.getElementById('chatMessages');
+          box.scrollTop = box.scrollHeight;
+        });
+    }
+
+    // Render a single message bubble
+    function renderMessage(msg) {
+      const isMe = msg.senderId === (currentUser?.uid || 'demo');
+      const container = document.createElement('div');
+      container.className = `message-row ${isMe ? 'me' : ''}`;
+      
+      const time = msg.timestamp ? new Date(msg.timestamp.toDate()).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+      
+      container.innerHTML = `
+        <div class="message-bubble">
+          <div class="message-sender">${escapeHtml(msg.senderName || 'Anonymous')}</div>
+          <div>${escapeHtml(msg.text || '')}</div>
+          <div class="message-time">${time}</div>
+        </div>
+      `;
+      document.getElementById('chatMessages').appendChild(container);
+    }
+
+    // Send new message
+    async function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+      if (!text || !currentRoom || !currentUser) return;
+      
+      input.value = '';
+      
+      await db.collection('chats')
+        .doc(currentRoom)
+        .collection('messages')
+        .add({
+          text: text,
+          senderName: currentUser.name || 'Guest',
+          senderId: currentUser.uid || 'demo',
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    }
+
+    // Leave chat & go back to rooms list
+    function leaveChat() {
+      if (unsubscribe) unsubscribe();
+      unsubscribe = null;
+      currentRoom = null;
+      
+      document.getElementById('roomsScreen').classList.remove('hidden');
+      document.getElementById('chatScreen').classList.remove('active');
+      document.getElementById('chatMessages').innerHTML = '';
+    }
+
+    // Basic HTML escaping for safety
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Enter key to send
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && document.activeElement?.id === 'messageInput') {
+        sendMessage();
+      }
+    });
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      loadUser();
+    });
+  </script>
+</body>
+</html>
+
