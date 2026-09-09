@@ -3,268 +3,363 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ENIGMA — Social 📸</title>
+  <title>ENIGMA — Social</title>
 
-  <!-- Firebase -->
+  <!-- PWA App Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#a855f7">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+
+  <!-- Three.js for 3D Background -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/postprocessing/EffectComposer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/postprocessing/RenderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/postprocessing/ShaderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/shaders/FXAAShader.js"></script>
 
   <!-- Styles -->
   <link rel="stylesheet" href="style.css" />
-  
+
   <style>
-    body {
-      background: #05050d;
-      min-height: 100vh;
+    :root {
+      --purple: #a855f7;
+      --purple-dark: #7c3aed;
+      --violet: #8b5cf6;
+      --pink: #ec4899;
+      --cyan: #06b6d4;
+      --green: #10b981;
+      --gold: #f59e0b;
+      --bg: #05050d;
+      --bg-light: #0f0f1f;
+      --bg-card: rgba(15, 15, 31, 0.85);
+      --text: #e0e0ea;
+      --text-muted: #9ca3af;
+      --glow: 0 0 20px rgba(168, 85, 247, 0.4), 0 0 40px rgba(168, 85, 247, 0.2);
+      --glow-strong: 0 0 30px rgba(168, 85, 247, 0.6), 0 0 60px rgba(236, 72, 153, 0.3);
     }
-    .page-header {
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    #canvas3d {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .app-container {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: rgba(5, 5, 13, 0.7);
+      backdrop-filter: blur(12px);
       padding: 1rem 1.5rem;
       border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 1rem;
     }
-    .back-link {
-      color: #a855f7;
-      text-decoration: none;
-      font-size: 1.2rem;
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 2px;
     }
-    .page-title {
-      font-size: 1.2rem;
-      font-weight: 700;
-      flex: 1;
-    }
-    .ghost-badge {
-      background: linear-gradient(135deg, #6366f1, #a855f7);
-      padding: 0.3rem 0.7rem;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 600;
+
+    .back-btn {
+      color: var(--purple);
       cursor: pointer;
+      font-size: 0.9rem;
     }
-    .section {
+
+    .back-btn:hover { text-decoration: underline; }
+
+    .main-content {
+      flex: 1;
       padding: 1.5rem;
+      max-width: 520px;
+      margin: 0 auto;
+      width: 100%;
     }
-    .section-title {
+
+    .card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+      border: 1px solid rgba(168, 85, 247, 0.2);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--glow);
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover { transform: translateY(-2px); }
+
+    h2 {
+      font-size: 1.4rem;
+      margin-bottom: 1.25rem;
+      text-align: center;
+      color: white;
+    }
+
+    h3 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      color: var(--purple);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+      padding-bottom: 0.25rem;
+    }
+
+    .tab {
+      flex: 1;
+      min-width: 80px;
+      padding: 0.75rem 0.5rem;
+      text-align: center;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+
+    .tab.active {
+      background: rgba(168, 85, 247, 0.15);
+      color: var(--purple);
+      border-color: var(--purple);
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .btn {
+      width: 100%;
+      padding: 0.9rem;
+      border-radius: 10px;
+      border: none;
       font-size: 1rem;
       font-weight: 600;
-      color: #9ca3af;
-      margin-bottom: 1rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    /* Stories Ring */
-    .stories-container {
-      display: flex;
-      gap: 1rem;
-      overflow-x: auto;
-      padding: 0.5rem 0 1rem;
-      scrollbar-width: none;
-    }
-    .stories-container::-webkit-scrollbar { display: none; }
-    .story-ring {
-      flex-shrink: 0;
-      width: 75px;
-      text-align: center;
       cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 0.75rem;
     }
-    .story-outer {
-      width: 65px;
-      height: 65px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #a855f7, #ec4899, #f59e0b);
-      padding: 3px;
-      margin: 0 auto;
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+      color: white;
+      box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
     }
-    .story-inner {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      background: #05050d;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(168, 85, 247, 0.5);
     }
-    .story-name {
-      font-size: 0.7rem;
-      margin-top: 0.4rem;
-      color: #9ca3af;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+
+    .btn-gold {
+      background: linear-gradient(135deg, var(--gold), #d97706);
+      color: white;
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
     }
-    .add-story .story-outer {
-      background: linear-gradient(135deg, #374151, #4b5563);
+
+    .btn-cyan {
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      color: white;
+      box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
     }
-    /* Posts Grid */
-    .posts-grid {
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--purple);
+      border: 1px solid var(--purple);
+    }
+
+    .btn-secondary:hover { background: rgba(168, 85, 247, 0.1); }
+
+    .post-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 0.75rem;
     }
+
     .post-card {
-      background: rgba(15, 15, 31, 0.85);
+      aspect-ratio: 1;
       border-radius: 12px;
-      overflow: hidden;
+      background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(236,72,153,0.2));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
       border: 1px solid rgba(168, 85, 247, 0.15);
     }
-    .post-img {
-      width: 100%;
-      aspect-ratio: 1;
-      background: linear-gradient(135deg, #1e1b4b, #312e81);
+
+    .post-card:hover {
+      transform: scale(1.03);
+      box-shadow: var(--glow-strong);
+    }
+
+    .post-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .post-label { font-size: 0.8rem; color: var(--text-muted); }
+
+    .stat-row {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2rem;
-    }
-    .post-info {
-      padding: 0.75rem;
-    }
-    .post-actions {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 0.5rem;
-    }
-    .action-btn {
-      background: none;
-      border: none;
-      color: #9ca3af;
-      cursor: pointer;
-      font-size: 1rem;
-    }
-    .action-btn.liked {
-      color: #ef4444;
-    }
-    /* Create Post Modal */
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.85);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 500;
-      padding: 1rem;
-    }
-    .modal.active {
-      display: flex;
-    }
-    .modal-card {
-      background: #0f0f1f;
-      border-radius: 16px;
-      padding: 1.5rem;
-      width: 100%;
-      max-width: 400px;
-      border: 1px solid rgba(168, 85, 247, 0.25);
-    }
-    .close-btn {
-      float: right;
-      background: none;
-      border: none;
-      color: #9ca3af;
-      font-size: 1.2rem;
-      cursor: pointer;
-    }
-    .preview-img {
-      width: 100%;
-      aspect-ratio: 1;
-      background: #1a1a2e;
-      border-radius: 8px;
-      margin: 1rem 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2rem;
-      color: #6b7280;
-    }
-    /* Ghost Mode */
-    .ghost-active {
-      filter: grayscale(0.3) brightness(0.9);
-    }
-    .ghost-note {
+      justify-content: space-around;
       text-align: center;
-      padding: 0.75rem;
-      background: rgba(99, 102, 241, 0.15);
-      border-radius: 10px;
-      color: #a5b4fc;
-      font-size: 0.85rem;
-      margin: 0 1rem;
+      margin-bottom: 1rem;
     }
+
+    .stat-value { font-size: 1.3rem; font-weight: 700; color: var(--purple); }
+    .stat-label { font-size: 0.75rem; color: var(--text-muted); }
+
+    .hidden { display: none !important; }
+    .empty-state { text-align: center; padding: 2rem; color: var(--text-muted); }
   </style>
 </head>
 
 <body>
-  <header class="page-header">
-    <a href="index.html" class="back-link">←</a>
-    <h1 class="page-title">📸 Social</h1>
-    <div class="ghost-badge" id="ghostToggle" onclick="toggleGhostMode()">👻 Off</div>
-  </header>
+  <!-- 3D Background Canvas -->
+  <canvas id="canvas3d"></canvas>
 
-  <div id="ghostNote" class="ghost-note hidden">
-    👻 Ghost Mode Active — You're browsing anonymously 💜
-  </div>
+  <div class="app-container">
+    <header>
+      <span class="back-btn" onclick="goBack()">← Back</span>
+      <h1 class="logo">SOCIAL</h1>
+      <span style="opacity:0;">💜</span>
+    </header>
 
-  <!-- ===== STORIES RING ===== -->
-  <div class="section" style="padding-bottom:0;">
-    <h2 class="section-title">Stories</h2>
-    <div class="stories-container" id="storiesContainer">
-      <!-- Add Story -->
-      <div class="story-ring add-story" onclick="openStoryUpload()">
-        <div class="story-outer">
-          <div class="story-inner">+</div>
+    <main class="main-content">
+
+      <!-- TABS -->
+      <div class="tabs">
+        <button class="tab active" data-tab="feed">✨ Feed</button>
+        <button class="tab" data-tab="create">➕ Create</button>
+        <button class="tab" data-tab="profile">👤 Profile</button>
+        <button class="tab" data-tab="earn">💰 Earn</button>
+      </div>
+
+      <!-- TAB 1: FEED -->
+      <div id="feedTab" class="tab-content active">
+        <div class="card">
+          <h3>Your World Feed 🌍</h3>
+          <p class="empty-state">
+            Coming soon! <br />
+            See photos, stories & moments from friends across the globe 💜
+          </p>
         </div>
-        <div class="story-name">Add Story</div>
       </div>
-    </div>
+
+      <!-- TAB 2: CREATE -->
+      <div id="createTab" class="tab-content">
+        <div class="card">
+          <h3>Share Your Magic ✨</h3>
+          
+          <div class="post-grid">
+            <div class="post-card" onclick="createStory()">
+              <span class="post-icon">📸</span>
+              <span class="post-label">Story</span>
+            </div>
+            <div class="post-card" onclick="createPost()">
+              <span class="post-icon">🖼️</span>
+              <span class="post-label">Post</span>
+            </div>
+            <div class="post-card" onclick="goLive()">
+              <span class="post-icon">🔴</span>
+              <span class="post-label">Go Live</span>
+            </div>
+            <div class="post-card" onclick="createKaraoke()">
+              <span class="post-icon">🎤</span>
+              <span class="post-label">Karaoke</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: PROFILE -->
+      <div id="profileTab" class="tab-content">
+        <div class="card">
+          <h3 id="profileName">Your Profile 💜</h3>
+          
+          <div class="stat-row">
+            <div>
+              <div class="stat-value" id="followersCount">0</div>
+              <div class="stat-label">Followers</div>
+            </div>
+            <div>
+              <div class="stat-value" id="postsCount">0</div>
+              <div class="stat-label">Posts</div>
+            </div>
+            <div>
+              <div class="stat-value" id="moolaBalance">100</div>
+              <div class="stat-label">Moola</div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" onclick="editProfile()">✏️ Edit Profile</button>
+          <button class="btn btn-secondary" onclick="openWallet()">💰 Open Wallet</button>
+        </div>
+      </div>
+
+      <!-- TAB 4: EARN -->
+      <div id="earnTab" class="tab-content">
+        <div class="card">
+          <h3>💎 Creator Hub — Earn Moola</h3>
+          <p style="color:var(--text-muted); margin-bottom:1rem;">Get paid for your creativity! 💜</p>
+          
+          <button class="btn btn-gold" onclick="watchToEarn()">👁️ Watch & Earn</button>
+          <button class="btn btn-cyan" onclick="createToEarn()">🎬 Create & Earn</button>
+          <button class="btn btn-primary" onclick="referralBonus()">🤝 Invite Friends</button>
+          
+          <div style="margin-top:1rem; padding:1rem; background:rgba(16,185,129,0.1); border-radius:10px;">
+            <p style="font-size:0.9rem; color:var(--green);">
+              💡 <strong>Did you know?</strong> Every view, like, share & gift earns you Moola — automatically! ✨
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </main>
   </div>
 
-  <!-- ===== POSTS FEED ===== -->
-  <div class="section">
-    <h2 class="section-title">For You</h2>
-    <div class="posts-grid" id="postsGrid">
-      <!-- Posts load here -->
-    </div>
-  </div>
-
-  <!-- ===== CREATE POST MODAL ===== -->
-  <div id="createPostModal" class="modal">
-    <div class="modal-card">
-      <button class="close-btn" onclick="closeModal()">×</button>
-      <h3 style="margin-bottom:1rem;">Create Post ✨</h3>
-      
-      <input type="file" id="postImageInput" accept="image/*" style="display:none;" onchange="previewImage(event)" />
-      <button class="btn btn-secondary" onclick="document.getElementById('postImageInput').click()">📷 Choose Image</button>
-      
-      <div class="preview-img" id="imagePreview">📷</div>
-      
-      <div class="input-group">
-        <label>Caption</label>
-        <textarea id="postCaption" rows="3" placeholder="Share your vibe... 💜"></textarea>
-      </div>
-      
-      <div class="input-group">
-        <label>Visibility</label>
-        <select id="postVisibility">
-          <option value="public">🌍 Everyone</option>
-          <option value="followers">👥 Followers Only</option>
-          <option value="vip">💎 VIP Only</option>
-        </select>
-      </div>
-      
-      <button class="btn btn-primary" onclick="submitPost()">Post ✨</button>
-      <div id="postError" class="error"></div>
-    </div>
-  </div>
-
-  <!-- ===== SCRIPT LOGIC ===== -->
+  <!-- ===== FIREBASE & LOGIC ===== -->
   <script>
-    // Firebase Config
+    // Firebase Config — matches index.html
     const firebaseConfig = {
       apiKey: "AIzaSyAfBOVVTaZuWdlwG-Yd6vI5hOpQzmhzjXk",
       authDomain: "enigma-42e91.firebaseapp.com",
@@ -276,230 +371,150 @@
       measurementId: "G-PN66LVMMW8"
     };
 
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
     const db = firebase.firestore();
-    const storage = firebase.storage();
 
-    // State
     let currentUser = null;
-    let ghostMode = false;
-    let selectedImageFile = null;
-    let unsubscribePosts = null;
 
-    // Load user
-    function loadUser() {
+    // ===== TAB SWITCHING =====
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Remove active from all
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        // Activate clicked
+        tab.classList.add('active');
+        const tabId = tab.getAttribute('data-tab');
+        document.getElementById(tabId + 'Tab').classList.add('active');
+      });
+    });
+
+    // ===== NAVIGATION =====
+    function goBack() { window.location.href = 'index.html'; }
+    function openWallet() { window.location.href = 'wallet.html'; }
+    
+    function createStory() { alert('📸 Story creator coming soon! ✨'); }
+    function createPost() { alert('🖼️ Post creator coming soon! ✨'); }
+    function goLive() { alert('🔴 Live streaming coming soon! ✨'); }
+    function createKaraoke() { alert('🎤 Karaoke rooms coming soon! ✨'); }
+    function editProfile() { alert('✏️ Profile editor coming soon! ✨'); }
+    
+    function watchToEarn() {
+      alert('👁️ Watch content and earn Moola automatically! 💎 Feature active soon!');
+    }
+    function createToEarn() {
+      alert('🎬 Upload your content — earn from every view! 💎 Feature active soon!');
+    }
+    function referralBonus() {
+      alert('🤝 Share your link — earn bonus Moola when friends join! 💎 Feature active soon!');
+    }
+
+    // ===== LOAD USER DATA =====
+    async function loadUserData() {
       const saved = localStorage.getItem('enigma_user');
       if (!saved) {
-        alert('Please log in first');
+        alert('Please log in first!');
         window.location.href = 'index.html';
         return;
       }
+      
       currentUser = JSON.parse(saved);
       
-      // Load ghost preference
-      ghostMode = localStorage.getItem('ghostMode') === 'true';
-      updateGhostDisplay();
+      if (document.getElementById('profileName')) {
+        document.getElementById('profileName').textContent = currentUser.name + ' 💜';
+      }
+      if (document.getElementById('moolaBalance')) {
+        document.getElementById('moolaBalance').textContent = currentUser.moola || 100;
+      }
+    }
+
+    // ===== 3D BACKGROUND =====
+    function init3D() {
+      const canvas = document.getElementById('canvas3d');
+      if (!canvas) return;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 3;
+
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      const orbGeo = new THREE.SphereGeometry(1.2, 64, 64);
+      const orbMat = new THREE.MeshBasicMaterial({
+        color: 0xa855f7, transparent: true, opacity: 0.15
+      });
+      const orb = new THREE.Mesh(orbGeo, orbMat);
+      scene.add(orb);
+
+      const coreGeo = new THREE.SphereGeometry(0.7, 48, 48);
+      const coreMat = new THREE.MeshBasicMaterial({
+        color: 0xc084fc, transparent: true, opacity: 0.3
+      });
+      const core = new THREE.Mesh(coreGeo, coreMat);
+      scene.add(core);
+
+      const particleCount = 600;
+      const pGeo = new THREE.BufferGeometry();
+      const pPos = new Float32Array(particleCount * 3);
+      const pColors = new Float32Array(particleCount * 3);
       
-      loadStories();
-      listenToPosts();
-    }
+      const colors = [
+        [0.66, 0.34, 0.97], [0.93, 0.28, 0.60],
+        [0.02, 0.71, 0.83], [0.96, 0.62, 0.04]
+      ];
 
-    // Ghost Mode Toggle
-    function toggleGhostMode() {
-      ghostMode = !ghostMode;
-      localStorage.setItem('ghostMode', ghostMode);
-      updateGhostDisplay();
-    }
+      for (let i = 0; i < particleCount * 3; i += 3) {
+        const r = 1.5 + Math.random() * 1.5;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos((Math.random() * 2) - 1);
+        pPos[i] = r * Math.sin(phi) * Math.cos(theta);
+        pPos[i+1] = r * Math.sin(phi) * Math.sin(theta);
+        pPos[i+2] = r * Math.cos(phi);
+        const c = colors[Math.floor(Math.random() * colors.length)];
+        pColors[i] = c[0]; pColors[i+1] = c[1]; pColors[i+2] = c[2];
+      }
 
-    function updateGhostDisplay() {
-      const btn = document.getElementById('ghostToggle');
-      const note = document.getElementById('ghostNote');
-      btn.textContent = ghostMode ? '👻 On' : '👻 Off';
-      btn.style.background = ghostMode ? 'linear-gradient(135deg, #6366f1, #a855f7)' : '';
-      note.classList.toggle('hidden', !ghostMode);
-      document.body.classList.toggle('ghost-active', ghostMode);
-    }
+      pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+      pGeo.setAttribute('color', new THREE.BufferAttribute(pColors, 3));
 
-    // Stories
-    async function loadStories() {
-      const container = document.getElementById('storiesContainer');
-      
-      const snap = await db.collection('stories')
-        .where('expiresAt', '>', new Date())
-        .orderBy('expiresAt', 'asc')
-        .limit(15)
-        .get();
+      const pMat = new THREE.PointsMaterial({
+        size: 0.025, vertexColors: true, transparent: true,
+        blending: THREE.AdditiveBlending
+      });
+      const particles = new THREE.Points(pGeo, pMat);
+      scene.add(particles);
 
-      snap.forEach(doc => {
-        const story = doc.data();
-        const el = document.createElement('div');
-        el.className = 'story-ring';
-        el.onclick = () => viewStory(doc.id, story);
-        el.innerHTML = `
-          <div class="story-outer">
-            <div class="story-inner">${story.emoji || '📸'}</div>
-          </div>
-          <div class="story-name">${escapeHtml(story.authorName?.substring(0,9) || 'User')}</div>
-        `;
-        container.appendChild(el);
+      function animate() {
+        requestAnimationFrame(animate);
+        orb.rotation.y += 0.002;
+        core.rotation.y += 0.003;
+        particles.rotation.y += 0.001;
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
       });
     }
 
-    function viewStory(id, story) {
-      alert(`📸 Story by ${story.authorName || 'Anonymous'}\n\n${story.caption || 'Tap to view full story'}`);
-    }
-
-    function openStoryUpload() {
-      alert('Story upload coming soon! ✨');
-    }
-
-    // Posts Feed — Real-Time Updates
-    function listenToPosts() {
-      if (unsubscribePosts) unsubscribePosts();
-      
-      unsubscribePosts = db.collection('posts')
-        .orderBy('createdAt', 'desc')
-        .limit(20)
-        .onSnapshot(snap => {
-          const grid = document.getElementById('postsGrid');
-          grid.innerHTML = '';
-          
-          snap.forEach(doc => {
-            const post = doc.data();
-            renderPost(doc.id, post);
-          });
-        });
-    }
-
-    function renderPost(postId, post) {
-      const grid = document.getElementById('postsGrid');
-      const likedByMe = post.likedBy?.includes(currentUser?.uid);
-      
-      const el = document.createElement('div');
-      el.className = 'post-card';
-      el.innerHTML = `
-        <div class="post-img">${post.emoji || '📸'}</div>
-        <div class="post-info">
-          <div style="font-weight:600; font-size:0.9rem; margin-bottom:0.3rem;">
-            ${escapeHtml(post.authorName || 'Anonymous')}
-          </div>
-          <div style="font-size:0.8rem; color:#9ca3af; margin-bottom:0.5rem;">
-            ${escapeHtml(post.caption || '')}
-          </div>
-          <div class="post-actions">
-            <button class="action-btn ${likedByMe ? 'liked' : ''}" 
-                    onclick="toggleLike('${postId}', ${post.likes || 0}, ${likedByMe})">
-              ❤️ ${post.likes || 0}
-            </button>
-            <button class="action-btn" onclick="commentPost('${postId}')">💬</button>
-            <button class="action-btn" onclick="sharePost('${postId}')">🔁</button>
-          </div>
-        </div>
-      `;
-      grid.appendChild(el);
-    }
-
-    // Like / Unlike
-    async function toggleLike(postId, currentLikes, isLiked) {
-      if (!currentUser) return;
-      
-      const ref = db.collection('posts').doc(postId);
-      
-      if (isLiked) {
-        await ref.update({
-          likes: currentLikes - 1,
-          likedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
-        });
-      } else {
-        await ref.update({
-          likes: currentLikes + 1,
-          likedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-        });
-      }
-    }
-
-    function commentPost(postId) {
-      alert('💬 Comments coming soon!');
-    }
-
-    function sharePost(postId) {
-      alert('🔁 Share link copied!');
-    }
-
-    // Create Post — Modal
-    function openModal() {
-      document.getElementById('createPostModal').classList.add('active');
-      selectedImageFile = null;
-      document.getElementById('imagePreview').textContent = '📷';
-      document.getElementById('postCaption').value = '';
-    }
-
-    function closeModal() {
-      document.getElementById('createPostModal').classList.remove('active');
-    }
-
-    function previewImage(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      selectedImageFile = file;
-      
-      const reader = new FileReader();
-      reader.onload = e => {
-        document.getElementById('imagePreview').innerHTML = 
-          `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;" />`;
-      };
-      reader.readAsDataURL(file);
-    }
-
-    // Submit New Post
-    async function submitPost() {
-      const caption = document.getElementById('postCaption').value.trim();
-      const visibility = document.getElementById('postVisibility').value;
-      const errEl = document.getElementById('postError');
-      
-      if (!caption && !selectedImageFile) {
-        errEl.textContent = 'Please add a caption or image';
-        return;
-      }
-
-      try {
-        let imageUrl = '';
-        
-        // Upload image if selected
-        if (selectedImageFile) {
-          const ref = storage.ref().child(`posts/${Date.now()}_${selectedImageFile.name}`);
-          const snapshot = await ref.put(selectedImageFile);
-          imageUrl = await snapshot.ref.getDownloadURL();
-        }
-
-        // Save post to Firestore
-        await db.collection('posts').add({
-          authorId: currentUser.uid,
-          authorName: currentUser.name || 'Anonymous',
-          caption: caption,
-          imageUrl: imageUrl,
-          visibility: visibility,
-          likes: 0,
-          likedBy: [],
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        alert('✅ Post shared!');
-        closeModal();
-      } catch (err) {
-        errEl.textContent = err.message;
-      }
-    }
-
-    // Basic HTML escaping
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', loadUser);
+    // ===== ON LOAD =====
+    document.addEventListener('DOMContentLoaded', () => {
+      loadUserData();
+      setTimeout(init3D, 100);
+    });
   </script>
+
+  <!-- Creator Hub Engine → Powers all earning features! 💎 -->
+  <script src="creator-hub.js"></script>
+
 </body>
 </html>
