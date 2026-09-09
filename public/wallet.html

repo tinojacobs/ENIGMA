@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ENIGMA — Moola Wallet 💰</title>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css" />
+  
+  <style>
+    body {
+      background: #05050d;
+      min-height: 100vh;
+    }
+    .page-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .back-link {
+      color: #a855f7;
+      text-decoration: none;
+      font-size: 1.2rem;
+    }
+    .page-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      flex: 1;
+    }
+    .balance-card {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.15));
+      border-radius: 20px;
+      padding: 2rem;
+      text-align: center;
+      margin: 1.5rem;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      box-shadow: 0 0 30px rgba(168, 85, 247, 0.25);
+    }
+    .balance-label {
+      font-size: 1rem;
+      color: #9ca3af;
+      margin-bottom: 0.5rem;
+    }
+    .balance-amount {
+      font-size: 3rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #f59e0b, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .balance-currency {
+      font-size: 1.2rem;
+      color: #9ca3af;
+      margin-top: 0.25rem;
+    }
+    .section {
+      padding: 0 1.5rem 1.5rem;
+    }
+    .section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #9ca3af;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .topup-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+    .topup-option {
+      background: rgba(15, 15, 31, 0.85);
+      border: 1px solid rgba(168, 85, 247, 0.2);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .topup-option:hover {
+      border-color: #a855f7;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(168, 85, 247, 0.25);
+    }
+    .moola-amt {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #f59e0b;
+    }
+    .zar-price {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      margin-top: 0.25rem;
+    }
+    .transactions {
+      margin-top: 1rem;
+    }
+    .tx-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.1);
+    }
+    .tx-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .tx-desc {
+      font-size: 0.9rem;
+    }
+    .tx-time {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 0.2rem;
+    }
+    .tx-amount {
+      font-weight: 600;
+    }
+    .tx-plus {
+      color: #10b981;
+    }
+    .tx-minus {
+      color: #ef4444;
+    }
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0 1.5rem;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.15);
+    }
+    .tab {
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+      background: transparent;
+      border: none;
+      color: #9ca3af;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .tab.active {
+      color: #a855f7;
+      border-bottom: 2px solid #a855f7;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="page-header">
+    <a href="index.html" class="back-link">←</a>
+    <h1 class="page-title">💰 Moola Wallet</h1>
+    <div style="width:24px;"></div>
+  </header>
+
+  <!-- ===== BALANCE CARD ===== -->
+  <div class="balance-card">
+    <div class="balance-label">Your Balance</div>
+    <div class="balance-amount" id="balanceDisplay">100</div>
+    <div class="balance-currency">MOOLA</div>
+  </div>
+
+  <!-- ===== TABS: Top-Up / Send / History ===== -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('topup')">💎 Top Up</button>
+    <button class="tab" onclick="switchTab('send')">💸 Send</button>
+    <button class="tab" onclick="switchTab('history')">📜 History</button>
+  </div>
+
+  <!-- ===== TOP-UP TAB ===== -->
+  <div id="topupTab" class="tab-content active">
+    <div class="section">
+      <h2 class="section-title">Buy Moola — South Africa 🇿🇦</h2>
+      <div class="topup-grid">
+        <div class="topup-option" onclick="buyMoola(200, 20)">
+          <div class="moola-amt">200</div>
+          <div class="zar-price">R20</div>
+        </div>
+        <div class="topup-option" onclick="buyMoola(300, 30)">
+          <div class="moola-amt">300</div>
+          <div class="zar-price">R30</div>
+        </div>
+        <div class="topup-option" onclick="buyMoola(500, 50)">
+          <div class="moola-amt">500</div>
+          <div class="zar-price">R50</div>
+        </div>
+        <div class="topup-option" onclick="buyMoola(1000, 100)">
+          <div class="moola-amt">1,000</div>
+          <div class="zar-price">R100</div>
+        </div>
+        <div class="topup-option" onclick="buyMoola(2000, 200)">
+          <div class="moola-amt">2,000</div>
+          <div class="zar-price">R200</div>
+        </div>
+        <div class="topup-option" onclick="buyMoola(5000, 500)">
+          <div class="moola-amt">5,000</div>
+          <div class="zar-price">R500</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">International 🌍</h2>
+      <div class="topup-grid">
+        <div class="topup-option" onclick="buyMoola(200, 1.10, 'USD')">
+          <div class="moola-amt">200</div>
+          <div class="zar-price">$1.10</div>
+        </div>
+        <div class="topup-option" onclick="buyMoola(500, 2.75, 'USD')">
+          <div class="moola-amt">500</div>
+          <div class="zar-price">$2.75</div>
+        </div>
+        <div class="topup-option" onclick="buyMoola(1000, 5.50, 'USD')">
+          <div class="moola-amt">1,000</div>
+          <div class="zar-price">$5.50</div>
+        </div>
+        <div class="topup-option" onclick="buyMoola(2000, 11.00, 'USD')">
+          <div class="moola-amt">2,000</div>
+          <div class="zar-price">$11.00</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">Payment Methods</h2>
+      <div class="card" style="margin:0;">
+        <p style="margin-bottom:1rem;">💳 Card • 📱 Airtime • 🧾 Voucher • 🏦 EFT</p>
+        <p style="font-size:0.85rem; color:#9ca3af;">Payments secured & encrypted</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SEND TAB ===== -->
+  <div id="sendTab" class="tab-content">
+    <div class="section">
+      <div class="card">
+        <div class="input-group">
+          <label>Recipient Phone Number</label>
+          <input type="tel" id="sendToPhone" placeholder="+27 00 000 0000" />
+        </div>
+        <div class="input-group">
+          <label>Amount (Moola)</label>
+          <input type="number" id="sendAmount" placeholder="100" min="1" />
+        </div>
+        <div class="input-group">
+          <label>Message (Optional)</label>
+          <input type="text" id="sendNote" placeholder="For you 💜" />
+        </div>
+        <button class="btn btn-primary" onclick="sendMoola()">Send Moola ✨</button>
+        <div id="sendError" class="error"></div>
+        <div id="sendSuccess" class="success"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== HISTORY TAB ===== -->
+  <div id="historyTab" class="tab-content">
+    <div class="section">
+      <div class="transactions" id="txList">
+        <div class="tx-item">
+          <div class="tx-info">
+            <span class="tx-desc">🎉 Welcome Bonus</span>
+            <span class="tx-time">— Just now</span>
+          </div>
+          <span class="tx-amount tx-plus">+100</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SCRIPT LOGIC ===== -->
+  <script>
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAfBOVVTaZuWdlwG-Yd6vI5hOpQzmhzjXk",
+      authDomain: "enigma-42e91.firebaseapp.com",
+      databaseURL: "https://enigma-42e91-default-rtdb.firebaseio.com",
+      projectId: "enigma-42e91",
+      storageBucket: "enigma-42e91.firebasestorage.app",
+      messagingSenderId: "539411208616",
+      appId: "1:539411208616:web:16f1f466166a5a5e29e59d",
+      measurementId: "G-PN66LVMMW8"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // State
+    let currentUser = null;
+    let userMoola = 100;
+
+    // Load user
+    function loadUser() {
+      const saved = localStorage.getItem('enigma_user');
+      if (!saved) {
+        alert('Please log in first');
+        window.location.href = 'index.html';
+        return;
+      }
+      currentUser = JSON.parse(saved);
+      userMoola = currentUser.moola || 100;
+      updateBalanceDisplay();
+      loadTransactions();
+    }
+
+    function updateBalanceDisplay() {
+      document.getElementById('balanceDisplay').textContent = userMoola.toLocaleString();
+      if (currentUser) {
+        currentUser.moola = userMoola;
+        localStorage.setItem('enigma_user', JSON.stringify(currentUser));
+      }
+    }
+
+    // Tab switching
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById(tabName + 'Tab').classList.add('active');
+    }
+
+    // Buy Moola
+    async function buyMoola(amount, cost, currency = 'ZAR') {
+      if (!currentUser) return;
+      
+      const confirmMsg = `Add ${amount.toLocaleString()} Moola for ${currency} ${cost}?`;
+      if (!confirm(confirmMsg)) return;
+
+      userMoola += amount;
+      updateBalanceDisplay();
+
+      // Save to Firestore
+      await db.collection('users').doc(currentUser.uid).update({
+        moola: userMoola
+      });
+
+      // Record transaction
+      await db.collection('users').doc(currentUser.uid)
+        .collection('transactions').add({
+          type: 'topup',
+          amount: amount,
+          cost: cost,
+          currency: currency,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          description: `Purchased ${amount} Moola`
+        });
+
+      alert(`✅ Success! +${amount.toLocaleString()} Moola added!`);
+      loadTransactions();
+    }
+
+    // Send Moola to another user
+    async function sendMoola() {
+      const phone = document.getElementById('sendToPhone').value.trim();
+      let amount = parseInt(document.getElementById('sendAmount').value);
+      const note = document.getElementById('sendNote').value.trim() || 'Moola sent 💜';
+      const errEl = document.getElementById('sendError');
+      const sucEl = document.getElementById('sendSuccess');
+      
+      errEl.textContent = '';
+      sucEl.textContent = '';
+
+      // Validate
+      if (!phone || !amount || amount < 1) {
+        errEl.textContent = 'Please fill in all fields correctly';
+        return;
+      }
+      if (amount > userMoola) {
+        errEl.textContent = `Not enough Moola! You have ${userMoola}`;
+        return;
+      }
+
+      // Normalize phone
+      let normPhone = phone.replace(/\s/g, '');
+      if (normPhone.startsWith('0')) normPhone = '+27' + normPhone.slice(1);
+      if (!normPhone.startsWith('+')) normPhone = '+' + normPhone;
+
+      try {
+        // Find recipient
+        const snap = await db.collection('users').where('phone', '==', normPhone).get();
+        if (snap.empty) {
+          errEl.textContent = 'User not found — check the number';
+          return;
+        }
+
+        const recipientDoc = snap.docs[0];
+        const recipientId = recipientDoc.id;
+        const recipientData = recipientDoc.data();
+
+        if (recipientId === currentUser.uid) {
+          errEl.textContent = 'Cannot send Moola to yourself';
+          return;
+        }
+
+        // Deduct from sender
+        userMoola -= amount;
+        await db.collection('users').doc(currentUser.uid).update({
+          moola: userMoola
+        });
+
+        // Add to recipient
+        const recipientBalance = (recipientData.moola || 0) + amount;
+        await db.collection('users').doc(recipientId).update({
+          moola: recipientBalance
+        });
+
+        // Record transactions
+        await db.collection('users').doc(currentUser.uid)
+          .collection('transactions').add({
+            type: 'send',
+            amount: -amount,
+            to: normPhone,
+            note: note,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          });
+
+        await db.collection('users').doc(recipientId)
+          .collection('transactions').add({
+            type: 'receive',
+            amount: amount,
+            from: currentUser.phone || 'Unknown',
+            note: note,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          });
+
+        updateBalanceDisplay();
+        sucEl.textContent = `✅ Sent ${amount} Moola to ${normPhone}!`;
+        
+        // Clear form
+        document.getElementById('sendToPhone').value = '';
+        document.getElementById('sendAmount').value = '';
+        document.getElementById('sendNote').value = '';
+
+        loadTransactions();
+      } catch (err) {
+        errEl.textContent = err.message;
+      }
+    }
+
+    // Load transaction history
+    async function loadTransactions() {
+      if (!currentUser) return;
+      
+      const container = document.getElementById('txList');
+      const snap = await db.collection('users').doc(currentUser.uid)
+        .collection('transactions')
+        .orderBy('timestamp', 'desc')
+        .limitToLast(20)
+        .get();
+
+      if (snap.empty) return;
+
+      container.innerHTML = '';
+      
+      snap.docs.forEach(doc => {
+        const tx = doc.data();
+        const time = tx.timestamp ? new Date(tx.timestamp.toDate()).toLocaleString() : 'Just now';
+        const isPlus = tx.amount > 0;
+        
+        container.innerHTML += `
+          <div class="tx-item">
+            <div class="tx-info">
+              <span class="tx-desc">${escapeHtml(tx.description || tx.note || tx.type)}</span>
+              <span class="tx-time">${time}</span>
+            </div>
+            <span class="tx-amount ${isPlus ? 'tx-plus' : 'tx-minus'}">
+              ${isPlus ? '+' : ''}${tx.amount}
+            </span>
+          </div>
+        `;
+      });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', loadUser);
+  </script>
+</body>
+</html>
