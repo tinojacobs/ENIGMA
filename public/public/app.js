@@ -1,88 +1,85 @@
-// ==============================================
-// ✅ ENIGMA — 3D Background & Global Animations
-// ==============================================
+/* ==========================================================
+   🌟 ENIGMA — COSMIC ANIMATION ENGINE 💫
+   Stars twinkle • Nebula drifts • Sun pulses • Galaxy glows
+   ========================================================== */
 
-(function () {
-  'use strict';
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('🌌 ENIGMA Galaxy Online — Welcome Home ✨');
 
-  // --- Check if Three.js is loaded ---
-  if (typeof THREE === 'undefined') {
-    console.warn('⚠️ Three.js not loaded — skipping 3D effects');
-    return;
+  // ⭐ Extra dynamic stars that appear randomly
+  const spaceBg = document.querySelector('.space-bg');
+  if (spaceBg) {
+    createExtraStars();
   }
 
-  // --- Canvas Setup ---
-  const canvas = document.getElementById('canvas3d');
-  if (!canvas) return;
-
-  const renderer = new THREE.WebGLRenderer({
-    canvas: canvas,
-    antialias: true,
-    alpha: true
-  });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-  // --- Scene & Camera ---
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(
-    75,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-  );
-  camera.position.z = 50;
-
-  // --- Lights ---
-  const ambient = new THREE.AmbientLight(0x6366f1, 0.5);
-  scene.add(ambient);
-
-  const pointLight = new THREE.PointLight(0xa855f7, 2, 100);
-  pointLight.position.set(0, 0, 30);
-  scene.add(pointLight);
-
-  // --- Floating Particles ---
-  const particles = [];
-  const geometry = new THREE.SphereGeometry(0.15, 8, 8);
-  const material = new THREE.MeshBasicMaterial({
-    color: 0xa855f7,
-    transparent: true,
-    opacity: 0.7
-  });
-
-  for (let i = 0; i < 150; i++) {
-    const particle = new THREE.Mesh(geometry, material.clone());
-    particle.position.set(
-      (Math.random() - 0.5) * 100,
-      (Math.random() - 0.5) * 100,
-      Math.random() * -50
-    );
-    particle.userData.speed = 0.02 + Math.random() * 0.05;
-    particle.material.opacity = 0.3 + Math.random() * 0.5;
-    scene.add(particle);
-    particles.push(particle);
-  }
-
-  // --- Animation Loop ---
-  function animate() {
-    requestAnimationFrame(animate);
-
-    particles.forEach(p => {
-      p.position.z += p.userData.speed;
-      if (p.position.z > 10) p.position.z = -50;
+  // 🔄 Smooth hover lift for gateway cards
+  const cards = document.querySelectorAll('.gateway-card');
+  cards.forEach(card => {
+    card.addEventListener('mouseenter', () => {
+      card.style.transform = 'translateY(-8px) scale(1.04)';
     });
-
-    camera.rotation.z += 0.0005;
-    renderer.render(scene, camera);
-  }
-  animate();
-
-  // --- Resize Handler ---
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'translateY(0) scale(1)';
+    });
   });
 
-  console.log('✨ ENIGMA 3D — Live & Glowing!');
-})();
+  // 💫 Moola Sun gentle pulse sync
+  syncSunPulse();
+});
+
+// ⭐ Create extra twinkling stars dynamically
+function createExtraStars() {
+  const container = document.querySelector('.space-bg');
+  if (!container) return;
+
+  for (let i = 0; i < 60; i++) {
+    const star = document.createElement('div');
+    star.style.cssText = `
+      position: absolute;
+      width: ${Math.random() * 2 + 1}px;
+      height: ${Math.random() * 2 + 1}px;
+      background: white;
+      border-radius: 50%;
+      left: ${Math.random() * 100}%;
+      top: ${Math.random() * 100}%;
+      opacity: ${Math.random() * 0.7 + 0.3};
+      animation: starFlicker ${Math.random() * 5 + 3}s ease-in-out infinite;
+      animation-delay: ${Math.random() * 3}s;
+    `;
+    container.appendChild(star);
+  }
+
+  // Inject flicker keyframes
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes starFlicker {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.3); }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+// 💫 Sync Moola Sun glow with page visibility
+function syncSunPulse() {
+  const sunGlow = document.querySelector('.sun-glow');
+  if (!sunGlow) return;
+
+  // Gentle brightness variation
+  let phase = 0;
+  setInterval(() => {
+    phase += 0.02;
+    const brightness = 0.7 + Math.sin(phase) * 0.15;
+    sunGlow.style.opacity = brightness;
+  }, 50);
+}
+
+// 📱 Prevent zoom on double-tap — keep it smooth
+let lastTouch = 0;
+document.addEventListener('touchstart', e => {
+  const now = Date.now();
+  if (now - lastTouch <= 300) {
+    e.preventDefault();
+  }
+  lastTouch = now;
+}, { passive: false });
