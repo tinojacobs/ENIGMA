@@ -247,3 +247,294 @@
     .prize-desc { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-top: 0.25rem; }
   </style>
 </head>
+
+<body>
+  <!-- 🌟 Same Cosmic Background -->
+  <div class="space-bg">
+    <div class="stars"></div>
+    <div class="nebula"></div>
+  </div>
+
+  <!-- 📱 Page Header -->
+  <header class="page-header">
+    <h1 class="page-title">Spin & Win 🎰</h1>
+    <p class="page-subtitle">Free daily spin — earn Moola every day ✨</p>
+    <div class="balance-display">
+      <span class="m-icon">M</span>
+      <span class="amount" id="spinBalance">100</span>
+    </div>
+  </header>
+
+  <!-- 🔥 Daily Streak -->
+  <div class="daily-card">
+    <div class="streak-text">🔥 Your Daily Streak</div>
+    <div class="streak-count" id="streakDays">3</div>
+    <div class="streak-desc">Day 3 bonus: +5 Moola extra! Keep it up! 💜</div>
+  </div>
+
+  <!-- 🎡 The Spinning Wheel -->
+  <div class="wheel-container">
+    <div class="wheel-pointer">▼</div>
+    <div class="wheel-ring" id="wheel">
+      <div class="wheel-inner">
+        <div class="wheel-center">
+          <div class="wheel-label">Tap to Spin</div>
+          <div class="wheel-value">🎁</div>
+        </div>
+      </div>
+    </div>
+    <button class="spin-btn" id="spinBtn">SPIN NOW! ✨</button>
+  </div>
+
+  <!-- 📋 Prize Tabs -->
+  <nav class="prize-tabs">
+    <div class="prize-tab active" data-prize="daily">Daily Prizes</div>
+    <div class="prize-tab" data-prize="lottery">Lottery 🎟️</div>
+    <div class="prize-tab" data-prize="boxes">Mystery Boxes 📦</div>
+  </nav>
+
+  <!-- 🏆 Prizes Grid -->
+  <div class="prizes-grid" id="prizesContent">
+    <!-- Daily Prizes (Default View) -->
+    <div class="prize-item">
+      <div class="prize-icon">💰</div>
+      <div class="prize-value">+5 Moola</div>
+      <div class="prize-desc">Common — 40% chance</div>
+    </div>
+    <div class="prize-item">
+      <div class="prize-icon">✨</div>
+      <div class="prize-value">+10 Moola</div>
+      <div class="prize-desc">Uncommon — 25% chance</div>
+    </div>
+    <div class="prize-item">
+      <div class="prize-icon">💎</div>
+      <div class="prize-value">+25 Moola</div>
+      <div class="prize-desc">Rare — 15% chance</div>
+    </div>
+    <div class="prize-item">
+      <div class="prize-icon">👑</div>
+      <div class="prize-value">+50 Moola</div>
+      <div class="prize-desc">Epic — 8% chance</div>
+    </div>
+    <div class="prize-item">
+      <div class="prize-icon">🌟</div>
+      <div class="prize-value">+100 Moola</div>
+      <div class="prize-desc">Legendary — 2% chance</div>
+    </div>
+    <div class="prize-item">
+      <div class="prize-icon">🎫</div>
+      <div class="prize-value">Free Lottery</div>
+      <div class="prize-desc">Bonus entry — 10% chance</div>
+    </div>
+  </div>
+
+  <!-- 💙 Bottom Navigation -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Home</span>
+    </a>
+    <a href="chatrooms.html" class="nav-item">
+      <span class="nav-icon">💬</span>
+      <span class="nav-label">Chat</span>
+    </a>
+    <a href="social.html" class="nav-item">
+      <span class="nav-icon">📸</span>
+      <span class="nav-label">Social</span>
+    </a>
+    <a href="wallet.html" class="nav-item">
+      <span class="nav-icon">💰</span>
+      <span class="nav-label">Moola</span>
+    </a>
+    <a href="spin.html" class="nav-item active">
+      <span class="nav-icon">🎰</span>
+      <span class="nav-label">Spin</span>
+    </a>
+  </nav>
+
+  <!-- ===== FIREBASE & SPIN LOGIC ===== -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAfBOVVTaZuWdlwG-Yd6vI5hOpQzmhzjXk",
+      authDomain: "enigma-42e91.firebaseapp.com",
+      databaseURL: "https://enigma-42e91-default-rtdb.firebaseio.com",
+      projectId: "enigma-42e91",
+      storageBucket: "enigma-42e91.firebasestorage.app",
+      messagingSenderId: "539411208616",
+      appId: "1:539411208616:web:16f1f466166a5a5e29e59d",
+      measurementId: "G-PN66LVMMW8"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // ===== Game State =====
+    let userMoola = 100;
+    let currentUser = null;
+    let canSpin = true;
+    let isSpinning = false;
+
+    // Prize options — matches wheel segments
+    const prizes = [
+      { moola: 5,   name: '+5 Moola',   chance: 40 },
+      { moola: 10,  name: '+10 Moola',  chance: 25 },
+      { moola: 25,  name: '+25 Moola',  chance: 15 },
+      { moola: 50,  name: '+50 Moola',  chance: 8 },
+      { moola: 100, name: '+100 Moola', chance: 2 },
+      { moola: 0,   name: 'Free Lottery Ticket', chance: 10 }
+    ];
+
+    // ===== Load User Data =====
+    function loadUserData() {
+      const saved = localStorage.getItem('enigma_user');
+      if (saved) {
+        currentUser = JSON.parse(saved);
+        userMoola = currentUser.moola || 100;
+        updateBalance();
+        checkSpinStatus();
+      }
+    }
+
+    function updateBalance() {
+      const el = document.getElementById('spinBalance');
+      if (el) el.textContent = userMoola;
+    }
+
+    function saveUserData() {
+      if (currentUser) {
+        currentUser.moola = userMoola;
+        localStorage.setItem('enigma_user', JSON.stringify(currentUser));
+        if (currentUser.uid) {
+          db.collection('users').doc(currentUser.uid).update({
+            moola: userMoola
+          }).catch(() => {});
+        }
+      }
+    }
+
+    // ===== Check if can spin today =====
+    function checkSpinStatus() {
+      const lastSpin = localStorage.getItem('enigma_last_spin');
+      const today = new Date().toDateString();
+      canSpin = lastSpin !== today;
+      updateSpinButton();
+    }
+
+    function updateSpinButton() {
+      const btn = document.getElementById('spinBtn');
+      btn.disabled = !canSpin || isSpinning;
+      btn.textContent = canSpin ? 'SPIN NOW! ✨' : 'Come Back Tomorrow 🌅';
+    }
+
+    // ===== Pick Random Prize =====
+    function getRandomPrize() {
+      const roll = Math.random() * 100;
+      let cumulative = 0;
+      for (const prize of prizes) {
+        cumulative += prize.chance;
+        if (roll < cumulative) return prize;
+      }
+      return prizes[0];
+    }
+
+    // ===== SPIN THE WHEEL =====
+    document.getElementById('spinBtn').addEventListener('click', async () => {
+      if (!canSpin || isSpinning) return;
+      
+      isSpinning = true;
+      updateSpinButton();
+      
+      const wheel = document.getElementById('wheel');
+      const prize = getRandomPrize();
+      
+      // Calculate rotation — land exactly on winning segment
+      const segmentAngle = 360 / prizes.length;
+      const prizeIndex = prizes.indexOf(prize);
+      const targetAngle = 360 * 5 + (360 - (prizeIndex * segmentAngle + segmentAngle / 2));
+      
+      wheel.style.transform = `rotate(${targetAngle}deg)`;
+      
+      // Wait for spin animation to finish
+      await new Promise(resolve => setTimeout(resolve, 4200));
+      
+      // Award prize
+      if (prize.moola > 0) {
+        userMoola += prize.moola;
+        saveUserData();
+        alert(`🎉 WINNER!\n\n${prize.name} added to your balance!\n\nNew Balance: ${userMoola} M 💜✨`);
+      } else {
+        alert(`🎫 BONUS!\n\nYou won a Free Lottery Ticket!\nCheck Lottery tab to enter! 🎟️✨`);
+      }
+      
+      // Mark spin used for today
+      localStorage.setItem('enigma_last_spin', new Date().toDateString());
+      isSpinning = false;
+      canSpin = false;
+      updateSpinButton();
+    });
+
+    // ===== Prize Tabs Switch =====
+    const prizeTabs = document.querySelectorAll('.prize-tab');
+    prizeTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        prizeTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const type = tab.dataset.prize;
+        const content = document.getElementById('prizesContent');
+        
+        if (type === 'daily') {
+          content.innerHTML = `
+            <div class="prize-item"><div class="prize-icon">💰</div><div class="prize-value">+5 Moola</div><div class="prize-desc">Common — 40%</div></div>
+            <div class="prize-item"><div class="prize-icon">✨</div><div class="prize-value">+10 Moola</div><div class="prize-desc">Uncommon — 25%</div></div>
+            <div class="prize-item"><div class="prize-icon">💎</div><div class="prize-value">+25 Moola</div><div class="prize-desc">Rare — 15%</div></div>
+            <div class="prize-item"><div class="prize-icon">👑</div><div class="prize-value">+50 Moola</div><div class="prize-desc">Epic — 8%</div></div>
+            <div class="prize-item"><div class="prize-icon">🌟</div><div class="prize-value">+100 Moola</div><div class="prize-desc">Legendary — 2%</div></div>
+            <div class="prize-item"><div class="prize-icon">🎫</div><div class="prize-value">Free Lottery</div><div class="prize-desc">Bonus — 10%</div></div>
+          `;
+        } else if (type === 'lottery') {
+          content.innerHTML = `
+            <div class="prize-item"><div class="prize-icon">🎟️</div><div class="prize-value">Entry 10 M</div><div class="prize-desc">Daily draw — 18:00 SAST</div></div>
+            <div class="prize-item"><div class="prize-icon">🏆</div><div class="prize-value">1st: 500 M</div><div class="prize-desc">Jackpot grows daily</div></div>
+            <div class="prize-item"><div class="prize-icon">🥈</div><div class="prize-value">2nd: 100 M</div><div class="prize-desc">Top 5 win!</div></div>
+            <div class="prize-item"><div class="prize-icon">🥉</div><div class="prize-value">3rd: 50 M</div><div class="prize-desc">Keep playing!</div></div>
+            <div class="prize-item" style="grid-column: span 2;"><div class="prize-icon">🔥</div><div class="prize-value">Buy 5 Get 1 Free!</div><div class="prize-desc">Support ENIGMA 💜</div></div>
+          `;
+        } else {
+          content.innerHTML = `
+            <div class="prize-item" onclick="alert('📦 Small Box opened!\\n+15–50 Moola guaranteed! ✨')">
+              <div class="prize-icon">📦</div><div class="prize-value">Small Box</div><div class="prize-desc">30 Moola to open</div>
+            </div>
+            <div class="prize-item" onclick="alert('🎁 Medium Box opened!\\n+50–200 Moola + bonus! ✨')">
+              <div class="prize-icon">🎁</div><div class="prize-value">Medium Box</div><div class="prize-desc">100 Moola to open</div>
+            </div>
+            <div class="prize-item" onclick="alert('💎 Gold Box opened!\\n+200–1,000 Moola + VIP rewards! ✨')">
+              <div class="prize-icon">💎</div><div class="prize-value">Gold Box</div><div class="prize-desc">500 Moola to open</div>
+            </div>
+            <div class="prize-item" onclick="alert('👑 Diamond Box opened!\\nUp to 5,000 Moola — Creator Level Up! ✨')">
+              <div class="prize-icon">👑</div><div class="prize-value">Diamond Box</div><div class="prize-desc">1,000 Moola to open</div>
+            </div>
+          `;
+        }
+      });
+    });
+
+    // ===== Auth Check =====
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = 'login.html';
+      } else {
+        loadUserData();
+      }
+    });
+  </script>
+
+  <!-- 🌟 Cosmic Animation Engine -->
+  <script src="app.js"></script>
+
+</body>
+</html>
+
+
+
+
