@@ -3,363 +3,257 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ENIGMA — Social</title>
+  <title>Social — ENIGMA 📸</title>
 
-  <!-- PWA App Manifest -->
+  <!-- ===== PWA & FIREBASE ===== -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#a855f7">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-  <!-- Firebase SDKs -->
+  <meta name="theme-color" content="#ec4899">
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
-  <!-- Three.js for 3D Background -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/postprocessing/EffectComposer.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/postprocessing/RenderPass.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/postprocessing/ShaderPass.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/shaders/FXAAShader.js"></script>
-
-  <!-- Styles -->
+  <!-- ===== STYLES — Same Cosmic System ===== -->
   <link rel="stylesheet" href="style.css" />
-
   <style>
-    :root {
-      --purple: #a855f7;
-      --purple-dark: #7c3aed;
-      --violet: #8b5cf6;
-      --pink: #ec4899;
-      --cyan: #06b6d4;
-      --green: #10b981;
-      --gold: #f59e0b;
-      --bg: #05050d;
-      --bg-light: #0f0f1f;
-      --bg-card: rgba(15, 15, 31, 0.85);
-      --text: #e0e0ea;
-      --text-muted: #9ca3af;
-      --glow: 0 0 20px rgba(168, 85, 247, 0.4), 0 0 40px rgba(168, 85, 247, 0.2);
-      --glow-strong: 0 0 30px rgba(168, 85, 247, 0.6), 0 0 60px rgba(236, 72, 153, 0.3);
-    }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    #canvas3d {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    .app-container {
+    /* Social-specific styles */
+    .page-header {
       position: relative;
-      z-index: 1;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+      z-index: 2;
+      padding: 1.5rem 1rem 0.5rem;
     }
 
-    header {
-      background: rgba(5, 5, 13, 0.7);
-      backdrop-filter: blur(12px);
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid rgba(168, 85, 247, 0.2);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo {
-      font-size: 1.5rem;
+    .page-title {
+      font-size: 1.75rem;
       font-weight: 800;
-      background: linear-gradient(135deg, var(--purple), var(--pink));
+      background: linear-gradient(135deg, #ec4899, #8b5cf6, #06b6d4);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      letter-spacing: 2px;
+      margin-bottom: 0.25rem;
     }
 
-    .back-btn {
-      color: var(--purple);
-      cursor: pointer;
-      font-size: 0.9rem;
+    .page-subtitle {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.85rem;
     }
 
-    .back-btn:hover { text-decoration: underline; }
-
-    .main-content {
-      flex: 1;
-      padding: 1.5rem;
-      max-width: 520px;
-      margin: 0 auto;
-      width: 100%;
-    }
-
-    .card {
-      background: var(--bg-card);
-      border-radius: 16px;
-      padding: 1.5rem;
-      margin-bottom: 1.25rem;
-      border: 1px solid rgba(168, 85, 247, 0.2);
-      backdrop-filter: blur(10px);
-      box-shadow: var(--glow);
-      transition: transform 0.3s ease;
-    }
-
-    .card:hover { transform: translateY(-2px); }
-
-    h2 {
-      font-size: 1.4rem;
-      margin-bottom: 1.25rem;
-      text-align: center;
-      color: white;
-    }
-
-    h3 {
-      font-size: 1.1rem;
-      margin-bottom: 1rem;
-      color: var(--purple);
-    }
-
-    .tabs {
+    .story-bar {
+      position: relative;
+      z-index: 2;
       display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1.5rem;
-      overflow-x: auto;
-      padding-bottom: 0.25rem;
-    }
-
-    .tab {
-      flex: 1;
-      min-width: 80px;
-      padding: 0.75rem 0.5rem;
-      text-align: center;
-      border-radius: 10px;
-      background: transparent;
-      color: var(--text-muted);
-      border: 1px solid transparent;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: all 0.3s ease;
-    }
-
-    .tab.active {
-      background: rgba(168, 85, 247, 0.15);
-      color: var(--purple);
-      border-color: var(--purple);
-    }
-
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-
-    .btn {
-      width: 100%;
-      padding: 0.9rem;
-      border-radius: 10px;
-      border: none;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin-bottom: 0.75rem;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--purple), var(--purple-dark));
-      color: white;
-      box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 25px rgba(168, 85, 247, 0.5);
-    }
-
-    .btn-gold {
-      background: linear-gradient(135deg, var(--gold), #d97706);
-      color: white;
-      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
-    }
-
-    .btn-cyan {
-      background: linear-gradient(135deg, var(--cyan), var(--green));
-      color: white;
-      box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
-    }
-
-    .btn-secondary {
-      background: transparent;
-      color: var(--purple);
-      border: 1px solid var(--purple);
-    }
-
-    .btn-secondary:hover { background: rgba(168, 85, 247, 0.1); }
-
-    .post-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
       gap: 0.75rem;
+      padding: 1rem;
+      overflow-x: auto;
+      scrollbar-width: none;
     }
 
-    .post-card {
-      aspect-ratio: 1;
-      border-radius: 12px;
-      background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(236,72,153,0.2));
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      border: 1px solid rgba(168, 85, 247, 0.15);
-    }
-
-    .post-card:hover {
-      transform: scale(1.03);
-      box-shadow: var(--glow-strong);
-    }
-
-    .post-icon { font-size: 2rem; margin-bottom: 0.5rem; }
-    .post-label { font-size: 0.8rem; color: var(--text-muted); }
-
-    .stat-row {
-      display: flex;
-      justify-content: space-around;
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-
-    .stat-value { font-size: 1.3rem; font-weight: 700; color: var(--purple); }
-    .stat-label { font-size: 0.75rem; color: var(--text-muted); }
-
-    .hidden { display: none !important; }
-    .empty-state { text-align: center; padding: 2rem; color: var(--text-muted); }
-  </style>
-</head>
+    .story
 
 <body>
-  <!-- 3D Background Canvas -->
-  <canvas id="canvas3d"></canvas>
-
-  <div class="app-container">
-    <header>
-      <span class="back-btn" onclick="goBack()">← Back</span>
-      <h1 class="logo">SOCIAL</h1>
-      <span style="opacity:0;">💜</span>
-    </header>
-
-    <main class="main-content">
-
-      <!-- TABS -->
-      <div class="tabs">
-        <button class="tab active" data-tab="feed">✨ Feed</button>
-        <button class="tab" data-tab="create">➕ Create</button>
-        <button class="tab" data-tab="profile">👤 Profile</button>
-        <button class="tab" data-tab="earn">💰 Earn</button>
-      </div>
-
-      <!-- TAB 1: FEED -->
-      <div id="feedTab" class="tab-content active">
-        <div class="card">
-          <h3>Your World Feed 🌍</h3>
-          <p class="empty-state">
-            Coming soon! <br />
-            See photos, stories & moments from friends across the globe 💜
-          </p>
-        </div>
-      </div>
-
-      <!-- TAB 2: CREATE -->
-      <div id="createTab" class="tab-content">
-        <div class="card">
-          <h3>Share Your Magic ✨</h3>
-          
-          <div class="post-grid">
-            <div class="post-card" onclick="createStory()">
-              <span class="post-icon">📸</span>
-              <span class="post-label">Story</span>
-            </div>
-            <div class="post-card" onclick="createPost()">
-              <span class="post-icon">🖼️</span>
-              <span class="post-label">Post</span>
-            </div>
-            <div class="post-card" onclick="goLive()">
-              <span class="post-icon">🔴</span>
-              <span class="post-label">Go Live</span>
-            </div>
-            <div class="post-card" onclick="createKaraoke()">
-              <span class="post-icon">🎤</span>
-              <span class="post-label">Karaoke</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 3: PROFILE -->
-      <div id="profileTab" class="tab-content">
-        <div class="card">
-          <h3 id="profileName">Your Profile 💜</h3>
-          
-          <div class="stat-row">
-            <div>
-              <div class="stat-value" id="followersCount">0</div>
-              <div class="stat-label">Followers</div>
-            </div>
-            <div>
-              <div class="stat-value" id="postsCount">0</div>
-              <div class="stat-label">Posts</div>
-            </div>
-            <div>
-              <div class="stat-value" id="moolaBalance">100</div>
-              <div class="stat-label">Moola</div>
-            </div>
-          </div>
-
-          <button class="btn btn-primary" onclick="editProfile()">✏️ Edit Profile</button>
-          <button class="btn btn-secondary" onclick="openWallet()">💰 Open Wallet</button>
-        </div>
-      </div>
-
-      <!-- TAB 4: EARN -->
-      <div id="earnTab" class="tab-content">
-        <div class="card">
-          <h3>💎 Creator Hub — Earn Moola</h3>
-          <p style="color:var(--text-muted); margin-bottom:1rem;">Get paid for your creativity! 💜</p>
-          
-          <button class="btn btn-gold" onclick="watchToEarn()">👁️ Watch & Earn</button>
-          <button class="btn btn-cyan" onclick="createToEarn()">🎬 Create & Earn</button>
-          <button class="btn btn-primary" onclick="referralBonus()">🤝 Invite Friends</button>
-          
-          <div style="margin-top:1rem; padding:1rem; background:rgba(16,185,129,0.1); border-radius:10px;">
-            <p style="font-size:0.9rem; color:var(--green);">
-              💡 <strong>Did you know?</strong> Every view, like, share & gift earns you Moola — automatically! ✨
-            </p>
-          </div>
-        </div>
-      </div>
-
-    </main>
+  <!-- 🌟 Same Cosmic Background -->
+  <div class="space-bg">
+    <div class="stars"></div>
+    <div class="nebula"></div>
   </div>
 
-  <!-- ===== FIREBASE & LOGIC ===== -->
+  <!-- 📱 Page Header -->
+  <header class="page-header">
+    <h1 class="page-title">Social ✨</h1>
+    <p class="page-subtitle">Share your world — earn as you connect 💜</p>
+  </header>
+
+  <!-- 📖 Stories Bar -->
+  <div class="story-bar">
+    <!-- Add Your Story -->
+    <div class="story-item" id="addStoryBtn">
+      <div class="story-ring story-add">
+        <div class="story-avatar">➕</div>
+      </div>
+      <span class="story-name">Your Story</span>
+    </div>
+
+    <!-- Sample Stories -->
+    <div class="story-item">
+      <div class="story-ring">
+        <div class="story-avatar">🌸</div>
+      </div>
+      <span class="story-name">Zara_SA</span>
+    </div>
+
+    <div class="story-item">
+      <div class="story-ring">
+        <div class="story-avatar">🎬</div>
+      </div>
+      <span class="story-name">Kweku_Live</span>
+    </div>
+
+    <div class="story-item">
+      <div class="story-ring viewed">
+        <div class="story-avatar">🌊</div>
+      </div>
+      <span class="story-name">CapeGirl</span>
+    </div>
+
+    <div class="story-item">
+      <div class="story-ring">
+        <div class="story-avatar">⭐</div>
+      </div>
+      <span class="story-name">Diamond_Creator</span>
+    </div>
+
+    <div class="story-item">
+      <div class="story-ring viewed">
+        <div class="story-avatar">🇳🇬</div>
+      </div>
+      <span class="story-name">LagosVibes</span>
+    </div>
+
+    <div class="story-item">
+      <div class="story-ring">
+        <div class="story-avatar">✨</div>
+      </div>
+      <span class="story-name">Enigma_Official</span>
+    </div>
+  </div>
+
+  <!-- 🔄 Feed Tabs -->
+  <nav class="feed-tabs">
+    <div class="feed-tab active" data-feed="following">Following</div>
+    <div class="feed-tab" data-feed="explore">Explore</div>
+    <div class="feed-tab" data-feed="earn">Earn 💎</div>
+    <div class="feed-tab" data-feed="ghost">Ghost 👻</div>
+  </nav>
+
+  <!-- 📝 Posts Feed -->
+  <main class="posts-container" id="postsFeed">
+    
+    <!-- Post 1 -->
+    <article class="post-card">
+      <div class="post-header">
+        <div class="post-avatar">🌸</div>
+        <div>
+          <div class="post-author">Zara_SA <span class="verified-badge">✓</span></div>
+          <div class="post-meta">2h ago · Cape Town</div>
+        </div>
+      </div>
+      <div class="post-media">🌅</div>
+      <div class="post-content">
+        Golden hour over Table Mountain 🏔️✨<br>
+        Who else loves Cape Town sunsets? 💜
+      </div>
+      <div class="post-actions">
+        <div class="action-group">
+          <button class="action-btn like-btn">❤️ 128</button>
+          <button class="action-btn">💬 24</button>
+          <button class="action-btn">🔁 Share</button>
+        </div>
+        <button class="action-btn moola-earn">💎 +2 M</button>
+      </div>
+    </article>
+
+    <!-- Post 2 — Ghost Mode -->
+    <article class="post-card">
+      <div class="post-header">
+        <div class="post-avatar">👻</div>
+        <div>
+          <div class="post-author">Anonymous <span class="ghost-badge">GHOST</span></div>
+          <div class="post-meta">4h ago · Hidden Location</div>
+        </div>
+      </div>
+      <div class="post-content" style="padding-bottom: 1rem;">
+        Sometimes it's easier to speak when no one knows who you are... 💭<br><br>
+        What's on your heart today? Safe space here 💜
+      </div>
+      <div class="post-actions">
+        <div class="action-group">
+          <button class="action-btn like-btn">❤️ 89</button>
+          <button class="action-btn">💬 41</button>
+          <button class="action-btn">🔁</button>
+        </div>
+        <button class="action-btn moola-earn">💎 +1 M</button>
+      </div>
+    </article>
+
+    <!-- Post 3 -- Creator -->
+    <article class="post-card">
+      <div class="post-header">
+        <div class="post-avatar">⭐</div>
+        <div>
+          <div class="post-author">Diamond_Creator <span class="verified-badge">✓</span></div>
+          <div class="post-meta">6h ago · Creator Level 5</div>
+        </div>
+      </div>
+      <div class="post-media">🎥</div>
+      <div class="post-content">
+        NEW VIDEO LIVE! 🚀<br>
+        How I earned 500 Moola this week just by posting ✨<br>
+        👉 Watch & earn too! 💎
+      </div>
+      <div class="post-actions">
+        <div class="action-group">
+          <button class="action-btn like-btn">❤️ 342</button>
+          <button class="action-btn">💬 67</button>
+          <button class="action-btn">🔁 Share</button>
+        </div>
+        <button class="action-btn moola-earn">💎 +5 M</button>
+      </div>
+    </article>
+
+    <!-- Post 4 -- International -->
+    <article class="post-card">
+      <div class="post-header">
+        <div class="post-avatar">🇳🇬</div>
+        <div>
+          <div class="post-author">LagosVibes</div>
+          <div class="post-meta">8h ago · Lagos, Nigeria</div>
+        </div>
+      </div>
+      <div class="post-media">🔥</div>
+      <div class="post-content">
+        Lagos never sleeps! 🇳🇬🔥<br>
+        Connecting with SA friends tonight — who's on? 💜
+      </div>
+      <div class="post-actions">
+        <div class="action-group">
+          <button class="action-btn like-btn">❤️ 215</button>
+          <button class="action-btn">💬 53</button>
+          <button class="action-btn">🔁</button>
+        </div>
+        <button class="action-btn moola-earn">💎 +2 M</button>
+      </div>
+    </article>
+  </main>
+
+  <!-- ➕ Create Post Button -->
+  <button class="create-fab" id="createPostBtn">✏️</button>
+
+  <!-- 💙 Bottom Navigation -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Home</span>
+    </a>
+    <a href="chatrooms.html" class="nav-item">
+      <span class="nav-icon">💬</span>
+      <span class="nav-label">Chat</span>
+    </a>
+    <a href="social.html" class="nav-item active">
+      <span class="nav-icon">📸</span>
+      <span class="nav-label">Social</span>
+    </a>
+    <a href="wallet.html" class="nav-item">
+      <span class="nav-icon">💰</span>
+      <span class="nav-label">Moola</span>
+    </a>
+    <a href="profile.html" class="nav-item">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">Me</span>
+    </a>
+  </nav>
+
+  <!-- ===== FIREBASE & SOCIAL LOGIC ===== -->
   <script>
-    // Firebase Config — matches index.html
     const firebaseConfig = {
       apiKey: "AIzaSyAfBOVVTaZuWdlwG-Yd6vI5hOpQzmhzjXk",
       authDomain: "enigma-42e91.firebaseapp.com",
@@ -371,150 +265,115 @@
       measurementId: "G-PN66LVMMW8"
     };
 
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // ===== User State =====
     let currentUser = null;
+    let userMoola = 100;
 
-    // ===== TAB SWITCHING =====
-    document.querySelectorAll('.tab').forEach(tab => {
+    function loadUserData() {
+      const saved = localStorage.getItem('enigma_user');
+      if (saved) {
+        currentUser = JSON.parse(saved);
+        userMoola = currentUser.moola || 100;
+      }
+    }
+
+    function saveUserData() {
+      if (currentUser) {
+        currentUser.moola = userMoola;
+        localStorage.setItem('enigma_user', JSON.stringify(currentUser));
+        if (currentUser.uid) {
+          db.collection('users').doc(currentUser.uid).update({
+            moola: userMoola
+          }).catch(() => {});
+        }
+      }
+    }
+
+    // ===== Feed Tabs =====
+    const feedTabs = document.querySelectorAll('.feed-tab');
+    const postsContainer = document.getElementById('postsFeed');
+
+    feedTabs.forEach(tab => {
       tab.addEventListener('click', () => {
-        // Remove active from all
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        
-        // Activate clicked
+        feedTabs.forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
-        const tabId = tab.getAttribute('data-tab');
-        document.getElementById(tabId + 'Tab').classList.add('active');
+        const feedType = tab.dataset.feed;
+        filterFeed(feedType);
       });
     });
 
-    // ===== NAVIGATION =====
-    function goBack() { window.location.href = 'index.html'; }
-    function openWallet() { window.location.href = 'wallet.html'; }
-    
-    function createStory() { alert('📸 Story creator coming soon! ✨'); }
-    function createPost() { alert('🖼️ Post creator coming soon! ✨'); }
-    function goLive() { alert('🔴 Live streaming coming soon! ✨'); }
-    function createKaraoke() { alert('🎤 Karaoke rooms coming soon! ✨'); }
-    function editProfile() { alert('✏️ Profile editor coming soon! ✨'); }
-    
-    function watchToEarn() {
-      alert('👁️ Watch content and earn Moola automatically! 💎 Feature active soon!');
-    }
-    function createToEarn() {
-      alert('🎬 Upload your content — earn from every view! 💎 Feature active soon!');
-    }
-    function referralBonus() {
-      alert('🤝 Share your link — earn bonus Moola when friends join! 💎 Feature active soon!');
+    function filterFeed(type) {
+      const allPosts = postsContainer.querySelectorAll('.post-card');
+      allPosts.forEach(post => {
+        if (type === 'following') {
+          post.style.display = 'block';
+        } else if (type === 'ghost') {
+          post.style.display = post.querySelector('.ghost-badge') ? 'block' : 'none';
+        } else {
+          post.style.display = 'block';
+        }
+      });
     }
 
-    // ===== LOAD USER DATA =====
-    async function loadUserData() {
-      const saved = localStorage.getItem('enigma_user');
-      if (!saved) {
-        alert('Please log in first!');
-        window.location.href = 'index.html';
-        return;
+    // ===== Like Button =====
+    document.addEventListener('click', e => {
+      if (e.target.classList.contains('like-btn')) {
+        e.target.classList.toggle('liked');
+        const text = e.target.textContent;
+        const num = parseInt(text.replace(/\D/g, '')) || 0;
+        e.target.textContent = e.target.classList.contains('liked') 
+          ? `❤️ ${num + 1}` 
+          : `❤️ ${num - 1}`;
       }
+    });
+
+    // ===== Earn Moola Button =====
+    document.addEventListener('click', e => {
+      if (e.target.classList.contains('moola-earn')) {
+        const amount = parseInt(e.target.textContent.replace(/\D/g, '')) || 1;
+        userMoola += amount;
+        saveUserData();
+        e.target.style.transform = 'scale(1.3)';
+        setTimeout(() => {
+          e.target.style.transform = 'scale(1)';
+        }, 300);
+        alert(`✨ +${amount} Moola earned!\nBalance: ${userMoola} M\n\nVisit Wallet to cash out 💜`);
+      }
+    });
+
+    // ===== Create Post =====
+    document.getElementById('createPostBtn').addEventListener('click', () => {
+      const content = prompt('✏️ Share your moment:\n\n(Leave empty to add photo/video first)');
+      if (content === null) return;
       
-      currentUser = JSON.parse(saved);
-      
-      if (document.getElementById('profileName')) {
-        document.getElementById('profileName').textContent = currentUser.name + ' 💜';
+      if (content.trim()) {
+        alert(`✅ Post created!\n\n"${content}"\n\nLive in your feed ✨\nEarn up to +5 Moola when friends engage! 💎`);
+      } else {
+        alert('📸 Photo/Video picker would open here ✨\n\nAdd a caption and post!');
       }
-      if (document.getElementById('moolaBalance')) {
-        document.getElementById('moolaBalance').textContent = currentUser.moola || 100;
+    });
+
+    // ===== Add Story =====
+    document.getElementById('addStoryBtn').addEventListener('click', () => {
+      alert('📖 Your Story\n\nAdd photo/video → visible for 24 hours ✨\nEarn Moola when viewers watch! 💎');
+    });
+
+    // ===== Auth Check =====
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = 'login.html';
+      } else {
+        loadUserData();
       }
-    }
-
-    // ===== 3D BACKGROUND =====
-    function init3D() {
-      const canvas = document.getElementById('canvas3d');
-      if (!canvas) return;
-
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-      camera.position.z = 3;
-
-      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-      const orbGeo = new THREE.SphereGeometry(1.2, 64, 64);
-      const orbMat = new THREE.MeshBasicMaterial({
-        color: 0xa855f7, transparent: true, opacity: 0.15
-      });
-      const orb = new THREE.Mesh(orbGeo, orbMat);
-      scene.add(orb);
-
-      const coreGeo = new THREE.SphereGeometry(0.7, 48, 48);
-      const coreMat = new THREE.MeshBasicMaterial({
-        color: 0xc084fc, transparent: true, opacity: 0.3
-      });
-      const core = new THREE.Mesh(coreGeo, coreMat);
-      scene.add(core);
-
-      const particleCount = 600;
-      const pGeo = new THREE.BufferGeometry();
-      const pPos = new Float32Array(particleCount * 3);
-      const pColors = new Float32Array(particleCount * 3);
-      
-      const colors = [
-        [0.66, 0.34, 0.97], [0.93, 0.28, 0.60],
-        [0.02, 0.71, 0.83], [0.96, 0.62, 0.04]
-      ];
-
-      for (let i = 0; i < particleCount * 3; i += 3) {
-        const r = 1.5 + Math.random() * 1.5;
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.acos((Math.random() * 2) - 1);
-        pPos[i] = r * Math.sin(phi) * Math.cos(theta);
-        pPos[i+1] = r * Math.sin(phi) * Math.sin(theta);
-        pPos[i+2] = r * Math.cos(phi);
-        const c = colors[Math.floor(Math.random() * colors.length)];
-        pColors[i] = c[0]; pColors[i+1] = c[1]; pColors[i+2] = c[2];
-      }
-
-      pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-      pGeo.setAttribute('color', new THREE.BufferAttribute(pColors, 3));
-
-      const pMat = new THREE.PointsMaterial({
-        size: 0.025, vertexColors: true, transparent: true,
-        blending: THREE.AdditiveBlending
-      });
-      const particles = new THREE.Points(pGeo, pMat);
-      scene.add(particles);
-
-      function animate() {
-        requestAnimationFrame(animate);
-        orb.rotation.y += 0.002;
-        core.rotation.y += 0.003;
-        particles.rotation.y += 0.001;
-        renderer.render(scene, camera);
-      }
-      animate();
-
-      window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      });
-    }
-
-    // ===== ON LOAD =====
-    document.addEventListener('DOMContentLoaded', () => {
-      loadUserData();
-      setTimeout(init3D, 100);
     });
   </script>
 
-  <!-- Creator Hub Engine → Powers all earning features! 💎 -->
-  <script src="creator-hub.js"></script>
+  <!-- 🌟 Cosmic Animation Engine -->
+  <script src="app.js"></script>
 
 </body>
 </html>
