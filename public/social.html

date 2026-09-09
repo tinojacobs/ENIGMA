@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ENIGMA — Social 📸</title>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css" />
+  
+  <style>
+    body {
+      background: #05050d;
+      min-height: 100vh;
+    }
+    .page-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .back-link {
+      color: #a855f7;
+      text-decoration: none;
+      font-size: 1.2rem;
+    }
+    .page-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      flex: 1;
+    }
+    .ghost-badge {
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      padding: 0.3rem 0.7rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .section {
+      padding: 1.5rem;
+    }
+    .section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #9ca3af;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    /* Stories Ring */
+    .stories-container {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      padding: 0.5rem 0 1rem;
+      scrollbar-width: none;
+    }
+    .stories-container::-webkit-scrollbar { display: none; }
+    .story-ring {
+      flex-shrink: 0;
+      width: 75px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .story-outer {
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #a855f7, #ec4899, #f59e0b);
+      padding: 3px;
+      margin: 0 auto;
+    }
+    .story-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #05050d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .story-name {
+      font-size: 0.7rem;
+      margin-top: 0.4rem;
+      color: #9ca3af;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .add-story .story-outer {
+      background: linear-gradient(135deg, #374151, #4b5563);
+    }
+    /* Posts Grid */
+    .posts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+    .post-card {
+      background: rgba(15, 15, 31, 0.85);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(168, 85, 247, 0.15);
+    }
+    .post-img {
+      width: 100%;
+      aspect-ratio: 1;
+      background: linear-gradient(135deg, #1e1b4b, #312e81);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+    .post-info {
+      padding: 0.75rem;
+    }
+    .post-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.5rem;
+    }
+    .action-btn {
+      background: none;
+      border: none;
+      color: #9ca3af;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .action-btn.liked {
+      color: #ef4444;
+    }
+    /* Create Post Modal */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      padding: 1rem;
+    }
+    .modal.active {
+      display: flex;
+    }
+    .modal-card {
+      background: #0f0f1f;
+      border-radius: 16px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 400px;
+      border: 1px solid rgba(168, 85, 247, 0.25);
+    }
+    .close-btn {
+      float: right;
+      background: none;
+      border: none;
+      color: #9ca3af;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+    .preview-img {
+      width: 100%;
+      aspect-ratio: 1;
+      background: #1a1a2e;
+      border-radius: 8px;
+      margin: 1rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: #6b7280;
+    }
+    /* Ghost Mode */
+    .ghost-active {
+      filter: grayscale(0.3) brightness(0.9);
+    }
+    .ghost-note {
+      text-align: center;
+      padding: 0.75rem;
+      background: rgba(99, 102, 241, 0.15);
+      border-radius: 10px;
+      color: #a5b4fc;
+      font-size: 0.85rem;
+      margin: 0 1rem;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="page-header">
+    <a href="index.html" class="back-link">←</a>
+    <h1 class="page-title">📸 Social</h1>
+    <div class="ghost-badge" id="ghostToggle" onclick="toggleGhostMode()">👻 Off</div>
+  </header>
+
+  <div id="ghostNote" class="ghost-note hidden">
+    👻 Ghost Mode Active — You're browsing anonymously 💜
+  </div>
+
+  <!-- ===== STORIES RING ===== -->
+  <div class="section" style="padding-bottom:0;">
+    <h2 class="section-title">Stories</h2>
+    <div class="stories-container" id="storiesContainer">
+      <!-- Add Story -->
+      <div class="story-ring add-story" onclick="openStoryUpload()">
+        <div class="story-outer">
+          <div class="story-inner">+</div>
+        </div>
+        <div class="story-name">Add Story</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== POSTS FEED ===== -->
+  <div class="section">
+    <h2 class="section-title">For You</h2>
+    <div class="posts-grid" id="postsGrid">
+      <!-- Posts load here -->
+    </div>
+  </div>
+
+  <!-- ===== CREATE POST MODAL ===== -->
+  <div id="createPostModal" class="modal">
+    <div class="modal-card">
+      <button class="close-btn" onclick="closeModal()">×</button>
+      <h3 style="margin-bottom:1rem;">Create Post ✨</h3>
+      
+      <input type="file" id="postImageInput" accept="image/*" style="display:none;" onchange="previewImage(event)" />
+      <button class="btn btn-secondary" onclick="document.getElementById('postImageInput').click()">📷 Choose Image</button>
+      
+      <div class="preview-img" id="imagePreview">📷</div>
+      
+      <div class="input-group">
+        <label>Caption</label>
+        <textarea id="postCaption" rows="3" placeholder="Share your vibe... 💜"></textarea>
+      </div>
+      
+      <div class="input-group">
+        <label>Visibility</label>
+        <select id="postVisibility">
+          <option value="public">🌍 Everyone</option>
+          <option value="followers">👥 Followers Only</option>
+          <option value="vip">💎 VIP Only</option>
+        </select>
+      </div>
+      
+      <button class="btn btn-primary" onclick="submitPost()">Post ✨</button>
+      <div id="postError" class="error"></div>
+    </div>
+  </div>
+
+  <!-- ===== SCRIPT LOGIC ===== -->
+  <script>
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAfBOVVTaZuWdlwG-Yd6vI5hOpQzmhzjXk",
+      authDomain: "enigma-42e91.firebaseapp.com",
+      databaseURL: "https://enigma-42e91-default-rtdb.firebaseio.com",
+      projectId: "enigma-42e91",
+      storageBucket: "enigma-42e91.firebasestorage.app",
+      messagingSenderId: "539411208616",
+      appId: "1:539411208616:web:16f1f466166a5a5e29e59d",
+      measurementId: "G-PN66LVMMW8"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+
+    // State
+    let currentUser = null;
+    let ghostMode = false;
+    let selectedImageFile = null;
+    let unsubscribePosts = null;
+
+    // Load user
+    function loadUser() {
+      const saved = localStorage.getItem('enigma_user');
+      if (!saved) {
+        alert('Please log in first');
+        window.location.href = 'index.html';
+        return;
+      }
+      currentUser = JSON.parse(saved);
+      
+      // Load ghost preference
+      ghostMode = localStorage.getItem('ghostMode') === 'true';
+      updateGhostDisplay();
+      
+      loadStories();
+      listenToPosts();
+    }
+
+    // Ghost Mode Toggle
+    function toggleGhostMode() {
+      ghostMode = !ghostMode;
+      localStorage.setItem('ghostMode', ghostMode);
+      updateGhostDisplay();
+    }
+
+    function updateGhostDisplay() {
+      const btn = document.getElementById('ghostToggle');
+      const note = document.getElementById('ghostNote');
+      btn.textContent = ghostMode ? '👻 On' : '👻 Off';
+      btn.style.background = ghostMode ? 'linear-gradient(135deg, #6366f1, #a855f7)' : '';
+      note.classList.toggle('hidden', !ghostMode);
+      document.body.classList.toggle('ghost-active', ghostMode);
+    }
+
+    // Stories
+    async function loadStories() {
+      const container = document.getElementById('storiesContainer');
+      
+      const snap = await db.collection('stories')
+        .where('expiresAt', '>', new Date())
+        .orderBy('expiresAt', 'asc')
+        .limit(15)
+        .get();
+
+      snap.forEach(doc => {
+        const story = doc.data();
+        const el = document.createElement('div');
+        el.className = 'story-ring';
+        el.onclick = () => viewStory(doc.id, story);
+        el.innerHTML = `
+          <div class="story-outer">
+            <div class="story-inner">${story.emoji || '📸'}</div>
+          </div>
+          <div class="story-name">${escapeHtml(story.authorName?.substring(0,9) || 'User')}</div>
+        `;
+        container.appendChild(el);
+      });
+    }
+
+    function viewStory(id, story) {
+      alert(`📸 Story by ${story.authorName || 'Anonymous'}\n\n${story.caption || 'Tap to view full story'}`);
+    }
+
+    function openStoryUpload() {
+      alert('Story upload coming soon! ✨');
+    }
+
+    // Posts Feed — Real-Time Updates
+    function listenToPosts() {
+      if (unsubscribePosts) unsubscribePosts();
+      
+      unsubscribePosts = db.collection('posts')
+        .orderBy('createdAt', 'desc')
+        .limit(20)
+        .onSnapshot(snap => {
+          const grid = document.getElementById('postsGrid');
+          grid.innerHTML = '';
+          
+          snap.forEach(doc => {
+            const post = doc.data();
+            renderPost(doc.id, post);
+          });
+        });
+    }
+
+    function renderPost(postId, post) {
+      const grid = document.getElementById('postsGrid');
+      const likedByMe = post.likedBy?.includes(currentUser?.uid);
+      
+      const el = document.createElement('div');
+      el.className = 'post-card';
+      el.innerHTML = `
+        <div class="post-img">${post.emoji || '📸'}</div>
+        <div class="post-info">
+          <div style="font-weight:600; font-size:0.9rem; margin-bottom:0.3rem;">
+            ${escapeHtml(post.authorName || 'Anonymous')}
+          </div>
+          <div style="font-size:0.8rem; color:#9ca3af; margin-bottom:0.5rem;">
+            ${escapeHtml(post.caption || '')}
+          </div>
+          <div class="post-actions">
+            <button class="action-btn ${likedByMe ? 'liked' : ''}" 
+                    onclick="toggleLike('${postId}', ${post.likes || 0}, ${likedByMe})">
+              ❤️ ${post.likes || 0}
+            </button>
+            <button class="action-btn" onclick="commentPost('${postId}')">💬</button>
+            <button class="action-btn" onclick="sharePost('${postId}')">🔁</button>
+          </div>
+        </div>
+      `;
+      grid.appendChild(el);
+    }
+
+    // Like / Unlike
+    async function toggleLike(postId, currentLikes, isLiked) {
+      if (!currentUser) return;
+      
+      const ref = db.collection('posts').doc(postId);
+      
+      if (isLiked) {
+        await ref.update({
+          likes: currentLikes - 1,
+          likedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+        });
+      } else {
+        await ref.update({
+          likes: currentLikes + 1,
+          likedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+        });
+      }
+    }
+
+    function commentPost(postId) {
+      alert('💬 Comments coming soon!');
+    }
+
+    function sharePost(postId) {
+      alert('🔁 Share link copied!');
+    }
+
+    // Create Post — Modal
+    function openModal() {
+      document.getElementById('createPostModal').classList.add('active');
+      selectedImageFile = null;
+      document.getElementById('imagePreview').textContent = '📷';
+      document.getElementById('postCaption').value = '';
+    }
+
+    function closeModal() {
+      document.getElementById('createPostModal').classList.remove('active');
+    }
+
+    function previewImage(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      selectedImageFile = file;
+      
+      const reader = new FileReader();
+      reader.onload = e => {
+        document.getElementById('imagePreview').innerHTML = 
+          `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;" />`;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Submit New Post
+    async function submitPost() {
+      const caption = document.getElementById('postCaption').value.trim();
+      const visibility = document.getElementById('postVisibility').value;
+      const errEl = document.getElementById('postError');
+      
+      if (!caption && !selectedImageFile) {
+        errEl.textContent = 'Please add a caption or image';
+        return;
+      }
+
+      try {
+        let imageUrl = '';
+        
+        // Upload image if selected
+        if (selectedImageFile) {
+          const ref = storage.ref().child(`posts/${Date.now()}_${selectedImageFile.name}`);
+          const snapshot = await ref.put(selectedImageFile);
+          imageUrl = await snapshot.ref.getDownloadURL();
+        }
+
+        // Save post to Firestore
+        await db.collection('posts').add({
+          authorId: currentUser.uid,
+          authorName: currentUser.name || 'Anonymous',
+          caption: caption,
+          imageUrl: imageUrl,
+          visibility: visibility,
+          likes: 0,
+          likedBy: [],
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        alert('✅ Post shared!');
+        closeModal();
+      } catch (err) {
+        errEl.textContent = err.message;
+      }
+    }
+
+    // Basic HTML escaping
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', loadUser);
+  </script>
+</body>
+</html>
