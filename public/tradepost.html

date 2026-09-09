@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ENIGMA — TradePost 🏪</title>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css" />
+  
+  <style>
+    body {
+      background: #05050d;
+      min-height: 100vh;
+    }
+    .page-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      position: sticky;
+      top: 0;
+      background: rgba(5,5,13,0.95);
+      z-index: 100;
+    }
+    .back-link {
+      color: #a855f7;
+      text-decoration: none;
+      font-size: 1.2rem;
+    }
+    .page-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      flex: 1;
+    }
+    .moola-balance {
+      background: linear-gradient(135deg, #f59e0b, #ec4899);
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .tabs {
+      display: flex;
+      overflow-x: auto;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.15);
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      padding: 0.6rem 1rem;
+      font-size: 0.85rem;
+      background: transparent;
+      border: 1px solid transparent;
+      color: #9ca3af;
+      cursor: pointer;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .tab.active {
+      color: white;
+      background: linear-gradient(135deg, #a855f7, #7c3aed);
+      border-color: transparent;
+    }
+    .section {
+      padding: 1.25rem 1.5rem;
+    }
+    .section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #9ca3af;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .listing-card {
+      background: rgba(15, 15, 31, 0.85);
+      border-radius: 14px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      border: 1px solid rgba(168, 85, 247, 0.15);
+      transition: all 0.3s ease;
+    }
+    .listing-card:hover {
+      border-color: #a855f7;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(168, 85, 247, 0.15);
+    }
+    .listing-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.5rem;
+    }
+    .listing-title {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    .listing-price {
+      font-weight: 700;
+      color: #f59e0b;
+      font-size: 0.95rem;
+    }
+    .listing-desc {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      margin-bottom: 0.5rem;
+      line-height: 1.4;
+    }
+    .listing-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+    .listing-seller {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .badge {
+      padding: 0.15rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .badge-featured {
+      background: linear-gradient(135deg, #f59e0b, #ec4899);
+      color: white;
+    }
+    .badge-job {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+    }
+    .ad-banner {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(236, 72, 153, 0.2));
+      border-radius: 12px;
+      padding: 1rem;
+      margin: 0 1.5rem 1rem;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .ad-banner:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 20px rgba(168, 85, 247, 0.25);
+    }
+    .ad-reward {
+      font-weight: 600;
+      color: #10b981;
+      margin-top: 0.3rem;
+      font-size: 0.9rem;
+    }
+    .create-fab {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #a855f7, #ec4899);
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);
+      z-index: 200;
+    }
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      padding: 1rem;
+    }
+    .modal.active {
+      display: flex;
+    }
+    .modal-card {
+      background: #0f0f1f;
+      border-radius: 16px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 420px;
+      border: 1px solid rgba(168, 85, 247, 0.25);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .close-btn {
+      float: right;
+      background: none;
+      border: none;
+      color: #9ca3af;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="page-header">
+    <a href="index.html" class="back-link">←</a>
+    <h1 class="page-title">🏪 TradePost</h1>
+    <div class="moola-balance" id="tpMoola">💰 100</div>
+  </header>
+
+  <!-- ===== AD BANNER — EARN MOOLA ===== -->
+  <div class="ad-banner" onclick="watchAd()">
+    <div style="font-weight:600;">📺 Watch & Earn — Optional!</div>
+    <div style="font-size:0.85rem; color:#9ca3af;">Support ENIGMA & get rewarded 💜</div>
+    <div class="ad-reward">+50 Moola per video ✨</div>
+  </div>
+
+  <!-- ===== CATEGORY TABS ===== -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('all')">✨ All</button>
+    <button class="tab" onclick="switchTab('buy')">🛒 Buy</button>
+    <button class="tab" onclick="switchTab('sell')">💰 Sell</button>
+    <button class="tab" onclick="switchTab('jobs')">💼 Jobs</button>
+    <button class="tab" onclick="switchTab('services')">🔧 Services</button>
+    <button class="tab" onclick="switchTab('local')">📍 Local</button>
+    <button class="tab" onclick="switchTab('global')">🌍 Global</button>
+  </div>
+
+  <!-- ===== LISTINGS AREA ===== -->
+  <div class="section">
+    <h2 class="section-title" id="tabHeading">All Listings</h2>
+    <div id="listingsContainer">
+      <!-- Featured Listing -->
+      <div class="listing-card">
+        <div class="listing-header">
+          <div class="listing-title">📱 Pre-Loved Phones — Great Deals!</div>
+          <div class="listing-price">R350 – R2,500</div>
+        </div>
+        <div class="listing-desc">Samsung, Huawei, iPhone — fully tested • 30-day warranty • Cape Town delivery</div>
+        <div class="listing-meta">
+          <div class="listing-seller">
+            <span>⭐ 4.9</span>
+            <span>• TechHub CT</span>
+          </div>
+          <span class="badge badge-featured">Featured</span>
+        </div>
+      </div>
+
+      <div class="listing-card">
+        <div class="listing-header">
+          <div class="listing-title">💼 General Staff — Durban & JHB</div>
+          <div class="listing-price">R4,500/mo</div>
+        </div>
+        <div class="listing-desc">Retail & warehouse positions available. No experience needed — training provided.</div>
+        <div class="listing-meta">
+          <div class="listing-seller">
+            <span>🏢 StaffDirect</span>
+          </div>
+          <span class="badge badge-job">Job</span>
+        </div>
+      </div>
+
+      <div class="listing-card">
+        <div class="listing-header">
+          <div class="listing-title">🎨 Graphic Design — Logos & Posts</div>
+          <div class="listing-price">150 Moola</div>
+        </div>
+        <div class="listing-desc">Professional designs for your business or profile. Fast delivery • Unlimited revisions</div>
+        <div class="listing-meta">
+          <div class="listing-seller">
+            <span>⭐ 5.0</span>
+            <span>• CreativeMinds</span>
+          </div>
+          <span>Global</span>
+        </div>
+      </div>
+
+      <div class="listing-card">
+        <div class="listing-header">
+          <div class="listing-title">🚗 Car Wash — Mobile Service</div>
+          <div class="listing-price">R80 – R150</div>
+        </div>
+        <div class="listing-desc">We come to you! Exterior • Interior • Engine — Cape Town Northern Suburbs</div>
+        <div class="listing-meta">
+          <div class="listing-seller">
+            <span>🚿 CleanCar</span>
+          </div>
+          <span>Local</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CREATE LISTING BUTTON ===== -->
+  <button class="create-fab" onclick="openCreateModal()">+</button>
+
+  <!-- ===== CREATE LISTING MODAL ===== -->
+  <div id="createModal" class="modal">
+    <div class="modal-card">
+      <button class="close-btn" onclick="closeCreateModal()">×</button>
+      <h3 style="margin-bottom:1rem;">📝 New Listing</h3>
+      
+      <div class="input-group">
+        <label>Title</label>
+        <input type="text" id="listingTitle" placeholder="What are you selling or offering?" />
+      </div>
+      
+      <div class="input-group">
+        <label>Category</label>
+        <select id="listingCategory">
+          <option value="buy">🛒 For Sale</option>
+          <option value="sell">📦 Selling</option>
+          <option value="jobs">💼 Job Opening</option>
+          <option value="services">🔧 Service</option>
+        </select>
+      </div>
+      
+      <div class="input-group">
+        <label>Price / Rate</label>
+        <input type="text" id="listingPrice" placeholder="e.g. R200 or 150 Moola" />
+      </div>
+      
+      <div class="input-group">
+        <label>Description</label>
+        <textarea id="listingDesc" rows="3" placeholder="Details, condition, location..."></textarea>
+      </div>
+      
+      <div class="input-group">
+        <label>Visibility</label>
+        <select id="listingVisibility">
+          <option value="local">📍 Local Only</option>
+          <option value="national">🇿🇦 South Africa</option>
+          <option value="global">🌍 Worldwide</option>
+        </select>
+      </div>
+      
+      <div class="input-group">
+        <label>Featured? (+50 Moola)</label>
+        <select id="listingFeatured">
+          <option value="no">Standard (Free)</option>
+          <option value="yes">⭐ Featured — Top of page!</option>
+        </select>
+      </div>
+      
+      <button class="btn btn-primary" onclick="submitListing()">Post Listing ✨</button>
+      <div id="listingError" class="error"></div>
+    </div>
+  </div>
+
+  <!-- ===== SCRIPT LOGIC ===== -->
+  <script>
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAfBOVVTaZuWdlwG-Yd6vI5hOpQzmhzjXk",
+      authDomain: "enigma-42e91.firebaseapp.com",
+      databaseURL: "https://enigma-42e91-default-rtdb.firebaseio.com",
+      projectId: "enigma-42e91",
+      storageBucket: "enigma-42e91.firebasestorage.app",
+      messagingSenderId: "539411208616",
+      appId: "1:539411208616:web:16f1f466166a5a5e29e59d",
+      measurementId: "G-PN66LVMMW8"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // State
+    let currentUser = null;
+    let userMoola = 100;
+    let unsubscribeListings = null;
+
+    // Load user
+    function loadUser() {
+      const saved = localStorage.getItem('enigma_user');
+      if (!saved) {
+        alert('Please log in first');
+        window.location.href = 'index.html';
+        return;
+      }
+      currentUser = JSON.parse(saved);
+      userMoola = currentUser.moola || 100;
+      updateMoolaDisplay();
+      loadListings('all');
+    }
+
+    function updateMoolaDisplay() {
+      const el = document.getElementById('tpMoola');
+      if (el) el.textContent = `💰 ${userMoola}`;
+    }
+
+    // Tab switching
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      const headings = {
+        all: '✨ All Listings',
+        buy: '🛒 Items for Sale',
+        sell: '💰 My Listings',
+        jobs: '💼 Jobs & Opportunities',
+        services: '🔧 Services Offered',
+        local: '📍 Near You',
+        global: '🌍 Worldwide'
+      };
+      document.getElementById('tabHeading').textContent = headings[tabName] || tabName;
+      
+      loadListings(tabName);
+    }
+
+    // Load & filter listings in real-time
+    function loadListings(filter = 'all') {
+      if (unsubscribeListings) unsubscribeListings();
+      
+      unsubscribeListings = db.collection('listings')
+        .orderBy('createdAt', 'desc')
+        .limit(30)
+        .onSnapshot(snap => {
+          const container = document.getElementById('listingsContainer');
+          container.innerHTML = '';
+          
+          if (snap.empty) {
+            container.innerHTML = '<p style="text-align:center; color:#9ca3af; padding:2rem;">No listings yet. Be the first to post! ✨</p>';
+            return;
+          }
+          
+          snap.forEach(doc => {
+            const listing = doc.data();
+            
+            // Apply filters
+            if (filter !== 'all' && listing.category !== filter && listing.visibility !== filter) return;
+            
+            renderListing(doc.id, listing);
+          });
+        });
+    }
+
+    function renderListing(id, l) {
+      const container = document.getElementById('listingsContainer');
+      const isFeatured = l.featured === true;
+      
+      const el = document.createElement('div');
+      el.className = `listing-card ${isFeatured ? 'featured' : ''}`;
+      el.innerHTML = `
+        <div class="listing-header">
+          <div class="listing-title">${escapeHtml(l.title)}</div>
+          <div class="listing-price">${escapeHtml(l.price)}</div>
+        </div>
+        <div class="listing-desc">${escapeHtml(l.description)}</div>
+        <div class="listing-meta">
+          <div class="listing-seller">
+            <span>👤 ${escapeHtml(l.sellerName || 'Anonymous')}</span>
+          </div>
+          ${isFeatured ? '<span class="badge badge-featured">⭐ Featured</span>' : ''}
+        </div>
+        <button class="btn btn-primary" style="margin-top:0.75rem; width:auto; padding:0.5rem 1rem; font-size:0.85rem;" onclick="contactSeller('${id}', '${l.sellerPhone || ''}')">
+          💬 Contact
+        </button>
+      `;
+      container.appendChild(el);
+    }
+
+    function contactSeller(id, phone) {
+      if (phone) {
+        alert(`📞 Contact: ${phone}\n\nOr message directly from their profile 💜`);
+      } else {
+        alert('💬 Message sent! Seller will reply soon ✨');
+      }
+    }
+
+    // Watch Ad — Earn Moola
+    async function watchAd() {
+      if (!currentUser) {
+        alert('Please log in first');
+        window.location.href = 'index.html';
+        return;
+      }
+      
+      const confirmWatch = confirm('📺 Watch short video ad?\n\n+50 Moola reward 💜');
+      if (!confirmWatch) return;
+      
+      // Simulate ad view
+      alert('✅ Ad complete! +50 Moola added!');
+      
+      userMoola += 50;
+      updateMoolaDisplay();
+      
+      if (currentUser) {
+        currentUser.moola = userMoola;
+        localStorage.setItem('enigma_user', JSON.stringify(currentUser));
+        await db.collection('users').doc(currentUser.uid).update({ moola: userMoola });
+      }
+    }
+
+    // Create Listing Modal
+    function openCreateModal() {
+      document.getElementById('createModal').classList.add('active');
+    }
+
+    function closeCreateModal() {
+      document.getElementById('createModal').classList.remove('active');
+      document.getElementById('listingTitle').value = '';
+      document.getElementById('listingPrice').value = '';
+      document.getElementById('listingDesc').value = '';
+      document.getElementById('listingError').textContent = '';
+    }
+
+    // Submit new listing
+    async function submitListing() {
+      const title = document.getElementById('listingTitle').value.trim();
+      const category = document.getElementById('listingCategory').value;
+      const price = document.getElementById('listingPrice').value.trim();
+      const description = document.getElementById('listingDesc').value.trim();
+      const visibility = document.getElementById('listingVisibility').value;
+      const featured = document.getElementById('listingFeatured').value === 'yes';
+      const errEl = document.getElementById('listingError');
+      
+      if (!title || !price) {
+        errEl.textContent = 'Please fill in title and price';
+        return;
+      }
+      
+      // Deduct featured fee
+      if (featured) {
+        if (userMoola < 50) {
+          errEl.textContent = 'Need 50 Moola to feature listing';
+          return;
+        }
+        userMoola -= 50;
+        if (currentUser) {
+          currentUser.moola = userMoola;
+          localStorage.setItem('enigma_user', JSON.stringify(currentUser));
+          await db.collection('users').doc(currentUser.uid).update({ moola: userMoola });
+          updateMoolaDisplay();
+        }
+      }
+      
+      // Save listing
+      await db.collection('listings').add({
+        title: title,
+        category: category,
+        price: price,
+        description: description,
+        visibility: visibility,
+        featured: featured,
+        sellerId: currentUser.uid,
+        sellerName: currentUser.name || 'Anonymous',
+        sellerPhone: currentUser.phone || '',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      
+      alert('✅ Listing posted!');
+      closeCreateModal();
+    }
+
+    // Basic HTML escaping
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', loadUser);
+  </script>
+</body>
+</html>
