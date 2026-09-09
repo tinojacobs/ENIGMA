@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Spin & Win — ENIGMA 🎰</title>
+
+  <!-- ===== PWA & FIREBASE ===== -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#f59e0b">
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <!-- ===== STYLES — Same Cosmic System ===== -->
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Spin & Win styles */
+    .page-header {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 2rem 1rem 1rem;
+    }
+
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b, #ef4444);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.25rem;
+    }
+
+    .page-subtitle {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.85rem;
+    }
+
+    .balance-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 1rem auto;
+      background: rgba(251,191,36,0.1);
+      border: 1px solid rgba(251,191,36,0.3);
+      border-radius: 999px;
+      padding: 0.6rem 1.5rem;
+      max-width: 200px;
+    }
+
+    .balance-display .m-icon {
+      font-weight: 900;
+      color: #fbbf24;
+      text-shadow: 0 0 8px rgba(251,191,36,0.5);
+    }
+
+    .balance-display .amount {
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    /* Wheel Container */
+    .wheel-container {
+      position: relative;
+      z-index: 2;
+      max-width: 320px;
+      margin: 0 auto 2rem;
+      padding: 1rem;
+    }
+
+    .wheel-ring {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: conic-gradient(
+        #fbbf24 0deg 45deg,
+        #8b5cf6 45deg 90deg,
+        #ec4899 90deg 135deg,
+        #22d3ee 135deg 180deg,
+        #34d399 180deg 225deg,
+        #f59e0b 225deg 270deg,
+        #a855f7 270deg 315deg,
+        #ef4444 315deg 360deg
+      );
+      box-shadow: 0 0 40px rgba(251,191,36,0.4), inset 0 0 30px rgba(255,255,255,0.1);
+      transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+    }
+
+    .wheel-inner {
+      position: absolute;
+      top: 8%; left: 8%; right: 8%; bottom: 8%;
+      background: #0f0f23;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    .wheel-center {
+      text-align: center;
+    }
+
+    .wheel-label {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .wheel-value {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #fbbf24;
+      text-shadow: 0 0 15px rgba(251,191,36,0.5);
+    }
+
+    .wheel-pointer {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 2rem;
+      z-index: 3;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+    }
+
+    .spin-btn {
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      border: none;
+      border-radius: 50px;
+      padding: 0.9rem 2.5rem;
+      color: white;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(245,158,11,0.4);
+      transition: all 0.3s ease;
+    }
+
+    .spin-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: translateX(-50%) scale(0.98);
+    }
+
+    .spin-btn:hover:not(:disabled) {
+      transform: translateX(-50%) translateY(-2px);
+      box-shadow: 0 6px 30px rgba(245,158,11,0.6);
+    }
+
+    /* Daily Status */
+    .daily-card {
+      position: relative;
+      z-index: 2;
+      max-width: 420px;
+      margin: 0 auto 1.5rem;
+      background: rgba(251,191,36,0.08);
+      border: 1px solid rgba(251,191,36,0.25);
+      border-radius: 16px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+
+    .streak-text {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 0.5rem;
+    }
+
+    .streak-count {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #fbbf24;
+      text-shadow: 0 0 15px rgba(251,191,36,0.4);
+    }
+
+    .streak-desc {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.4);
+      margin-top: 0.5rem;
+    }
+
+    /* Tabs */
+    .prize-tabs {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .prize-tab {
+      padding: 0.6rem 1rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      color: rgba(255,255,255,0.6);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .prize-tab.active {
+      background: rgba(251,191,36,0.15);
+      border-color: rgba(251,191,36,0.4);
+      color: #fbbf24;
+    }
+
+    .prizes-grid {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      padding: 0 1rem 100px;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    .prize-item {
+      background: rgba(18,18,60,0.6);
+      border: 1px solid rgba(251,191,36,0.15);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      transition: all 0.25s ease;
+    }
+
+    .prize-item:hover {
+      border-color: rgba(251,191,36,0.4);
+      transform: scale(1.03);
+    }
+
+    .prize-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .prize-value { font-weight: 700; color: #fbbf24; }
+    .prize-desc { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-top: 0.25rem; }
+  </style>
+</head>
