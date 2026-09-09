@@ -3,288 +3,500 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ENIGMA — Moola Wallet 💰</title>
+  <title>Moola Wallet — ENIGMA 💰</title>
 
-  <!-- Firebase -->
+  <!-- ===== PWA & FIREBASE ===== -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#f59e0b">
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
-  <!-- Styles -->
+  <!-- ===== STYLES — Same Cosmic System ===== -->
   <link rel="stylesheet" href="style.css" />
-  
   <style>
-    body {
-      background: #05050d;
-      min-height: 100vh;
-    }
+    /* Wallet-specific styles */
     .page-header {
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid rgba(168, 85, 247, 0.2);
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-    .back-link {
-      color: #a855f7;
-      text-decoration: none;
-      font-size: 1.2rem;
-    }
-    .page-title {
-      font-size: 1.2rem;
-      font-weight: 700;
-      flex: 1;
-    }
-    .balance-card {
-      background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.15));
-      border-radius: 20px;
-      padding: 2rem;
+      position: relative;
+      z-index: 2;
       text-align: center;
-      margin: 1.5rem;
-      border: 1px solid rgba(168, 85, 247, 0.3);
-      box-shadow: 0 0 30px rgba(168, 85, 247, 0.25);
+      padding: 2rem 1rem 1rem;
     }
-    .balance-label {
-      font-size: 1rem;
-      color: #9ca3af;
-      margin-bottom: 0.5rem;
-    }
-    .balance-amount {
-      font-size: 3rem;
+
+    .page-title {
+      font-size: 1.75rem;
       font-weight: 800;
-      background: linear-gradient(135deg, #f59e0b, #ec4899);
+      background: linear-gradient(135deg, #fbbf24, #f59e0b, #d97706);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      margin-bottom: 0.25rem;
     }
-    .balance-currency {
-      font-size: 1.2rem;
-      color: #9ca3af;
-      margin-top: 0.25rem;
+
+    .balance-card {
+      position: relative;
+      z-index: 2;
+      max-width: 420px;
+      margin: 0 auto 1.5rem;
+      background: linear-gradient(135deg, rgba(251,191,36,0.15), rgba(245,158,11,0.08));
+      border: 1px solid rgba(251,191,36,0.35);
+      border-radius: 24px;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      box-shadow: 0 8px 40px rgba(251,191,36,0.15), inset 0 0 30px rgba(251,191,36,0.05);
     }
-    .section {
-      padding: 0 1.5rem 1.5rem;
-    }
-    .section-title {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #9ca3af;
-      margin-bottom: 1rem;
+
+    .balance-label {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.5);
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.15em;
+      margin-bottom: 0.5rem;
     }
-    .topup-grid {
+
+    .balance-display {
+      font-size: 3rem;
+      font-weight: 900;
+      color: #fbbf24;
+      text-shadow: 0 0 20px rgba(251,191,36,0.5);
+      margin-bottom: 0.25rem;
+    }
+
+    .balance-note {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.4);
+    }
+
+    .action-tabs {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0 1rem;
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .action-tabs::-webkit-scrollbar { display: none; }
+
+    .action-tab {
+      flex-shrink: 0;
+      padding: 0.75rem 1.25rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      color: rgba(255,255,255,0.6);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .action-tab.active {
+      background: rgba(251,191,36,0.15);
+      border-color: rgba(251,191,36,0.4);
+      color: #fbbf24;
+      box-shadow: 0 0 15px rgba(251,191,36,0.2);
+    }
+
+    .content-card {
+      position: relative;
+      z-index: 2;
+      max-width: 420px;
+      margin: 0 auto 1.5rem;
+      background: rgba(18,18,60,0.6);
+      border: 1px solid rgba(251,191,36,0.2);
+      border-radius: 20px;
+      padding: 1.5rem;
+      display: none;
+      backdrop-filter: blur(12px);
+    }
+
+    .content-card.active {
+      display: block;
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      color: #fbbf24;
+    }
+
+    .quick-packs {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 0.75rem;
+      margin-bottom: 1.5rem;
     }
-    .topup-option {
-      background: rgba(15, 15, 31, 0.85);
-      border: 1px solid rgba(168, 85, 247, 0.2);
+
+    .pack-option {
+      background: rgba(251,191,36,0.08);
+      border: 1px solid rgba(251,191,36,0.2);
       border-radius: 12px;
       padding: 1rem;
       text-align: center;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.25s ease;
     }
-    .topup-option:hover {
-      border-color: #a855f7;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(168, 85, 247, 0.25);
+
+    .pack-option:hover, .pack-option.selected {
+      border-color: #fbbf24;
+      background: rgba(251,191,36,0.15);
+      transform: scale(1.03);
     }
-    .moola-amt {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #f59e0b;
+
+    .pack-moola {
+      font-weight: 900;
+      font-size: 1.1rem;
+      color: #fbbf24;
     }
-    .zar-price {
-      font-size: 0.85rem;
-      color: #9ca3af;
+
+    .pack-price {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.5);
       margin-top: 0.25rem;
     }
-    .transactions {
-      margin-top: 1rem;
+
+    .form-group {
+      margin-bottom: 1rem;
     }
+
+    .form-label {
+      display: block;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 0.4rem;
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(10,10,40,0.6);
+      border: 1px solid rgba(251,191,36,0.25);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: #fbbf24;
+      box-shadow: 0 0 0 3px rgba(251,191,36,0.15);
+    }
+
+    .btn-gold {
+      width: 100%;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      border: none;
+      border-radius: 12px;
+      padding: 0.9rem;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(245,158,11,0.35);
+    }
+
+    .btn-gold:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px rgba(245,158,11,0.5);
+    }
+
+    .btn-gold:disabled {
+      opacity: 0.6;
+      transform: none;
+      cursor: not-allowed;
+    }
+
+    .method-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .method-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .method-item:hover, .method-item.selected {
+      border-color: #fbbf24;
+      background: rgba(251,191,36,0.08);
+    }
+
+    .method-icon { font-size: 1.2rem; }
+    .method-name { font-weight: 600; font-size: 0.9rem; }
+    .method-desc { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-top: 0.1rem; }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
     .tx-item {
       display: flex;
       justify-content: space-between;
-      padding: 0.75rem 0;
-      border-bottom: 1px solid rgba(168, 85, 247, 0.1);
+      align-items: center;
+      padding: 0.85rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
-    .tx-info {
-      display: flex;
-      flex-direction: column;
-    }
-    .tx-desc {
-      font-size: 0.9rem;
-    }
-    .tx-time {
-      font-size: 0.75rem;
-      color: #6b7280;
-      margin-top: 0.2rem;
-    }
-    .tx-amount {
-      font-weight: 600;
-    }
-    .tx-plus {
-      color: #10b981;
-    }
-    .tx-minus {
-      color: #ef4444;
-    }
-    .tabs {
-      display: flex;
-      gap: 0.5rem;
-      padding: 0 1.5rem;
-      border-bottom: 1px solid rgba(168, 85, 247, 0.15);
-    }
-    .tab {
-      padding: 0.75rem 1rem;
-      font-size: 0.9rem;
-      background: transparent;
-      border: none;
-      color: #9ca3af;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-    }
-    .tab.active {
-      color: #a855f7;
-      border-bottom: 2px solid #a855f7;
-    }
-    .tab-content {
-      display: none;
-    }
-    .tab-content.active {
-      display: block;
-    }
+
+    .tx-info { display: flex; flex-direction: column; }
+    .tx-title { font-weight: 600; font-size: 0.85rem; }
+    .tx-date { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-top: 0.15rem; }
+    .tx-amount { font-weight: 700; font-size: 0.9rem; }
+    .tx-amount.plus { color: #34d399; }
+    .tx-amount.minus { color: #f87171; }
   </style>
 </head>
 
 <body>
+  <!-- 🌟 Same Cosmic Background -->
+  <div class="space-bg">
+    <div class="stars"></div>
+    <div class="nebula"></div>
+  </div>
+
+  <!-- 💎 Balance Display -->
   <header class="page-header">
-    <a href="index.html" class="back-link">←</a>
-    <h1 class="page-title">💰 Moola Wallet</h1>
-    <div style="width:24px;"></div>
+    <h1 class="page-title">Moola Wallet 💰</h1>
+    <p class="page-subtitle">Your ENIGMA currency — earn, spend, send ✨</p>
   </header>
 
-  <!-- ===== BALANCE CARD ===== -->
   <div class="balance-card">
     <div class="balance-label">Your Balance</div>
-    <div class="balance-amount" id="balanceDisplay">100</div>
-    <div class="balance-currency">MOOLA</div>
+    <div class="balance-display" id="mainBalance">100</div>
+    <div class="balance-note">1 Moola ≈ R1.00 ZAR • Global Gateway currency</div>
   </div>
 
-  <!-- ===== TABS: Top-Up / Send / History ===== -->
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('topup')">💎 Top Up</button>
-    <button class="tab" onclick="switchTab('send')">💸 Send</button>
-    <button class="tab" onclick="switchTab('history')">📜 History</button>
-  </div>
+  <!-- 🔄 Action Tabs -->
+  <nav class="action-tabs">
+    <div class="action-tab active" data-action="topup">⬆️ Top Up</div>
+    <div class="action-tab" data-action="send">💸 Send</div>
+    <div class="action-tab" data-action="withdraw">🏦 Cash Out</div>
+    <div class="action-tab" data-action="history">📜 History</div>
+  </nav>
 
-  <!-- ===== TOP-UP TAB ===== -->
-  <div id="topupTab" class="tab-content active">
-    <div class="section">
-      <h2 class="section-title">Buy Moola — South Africa 🇿🇦</h2>
-      <div class="topup-grid">
-        <div class="topup-option" onclick="buyMoola(200, 20)">
-          <div class="moola-amt">200</div>
-          <div class="zar-price">R20</div>
+  <!-- ⬆️ TOP UP Content -->
+  <main class="content-card active" id="topupCard">
+    <h3 class="card-title">Buy Moola — Quick Packs</h3>
+    
+    <div class="quick-packs">
+      <div class="pack-option" data-moola="200" data-price="20">
+        <div class="pack-moola">200 M</div>
+        <div class="pack-price">R20</div>
+      </div>
+      <div class="pack-option" data-moola="300" data-price="30">
+        <div class="pack-moola">300 M</div>
+        <div class="pack-price">R30</div>
+      </div>
+      <div class="pack-option" data-moola="500" data-price="50">
+        <div class="pack-moola">500 M</div>
+        <div class="pack-price">R50</div>
+      </div>
+      <div class="pack-option" data-moola="1000" data-price="100">
+        <div class="pack-moola">1,000 M</div>
+        <div class="pack-price">R100</div>
+      </div>
+      <div class="pack-option" data-moola="2000" data-price="200">
+        <div class="pack-moola">2,000 M</div>
+        <div class="pack-price">R200</div>
+      </div>
+      <div class="pack-option" data-moola="5000" data-price="500">
+        <div class="pack-moola">5,000 M</div>
+        <div class="pack-price">R500</div>
+      </div>
+    </div>
+
+    <h4 style="margin: 1rem 0 0.75rem; font-size: 0.9rem; color: rgba(255,255,255,0.6);">Payment Method</h4>
+    
+    <div class="method-list">
+      <div class="method-item selected" data-method="eft">
+        <span class="method-icon">🏦</span>
+        <div>
+          <div class="method-name">EFT / Bank Transfer</div>
+          <div class="method-desc">Instant — all major SA banks</div>
         </div>
-        <div class="topup-option" onclick="buyMoola(300, 30)">
-          <div class="moola-amt">300</div>
-          <div class="zar-price">R30</div>
+      </div>
+      <div class="method-item" data-method="voucher">
+        <span class="method-icon">🎫</span>
+        <div>
+          <div class="method-name">Voucher (OTT / Kazang)</div>
+          <div class="method-desc">Buy at any store — enter code</div>
         </div>
-        <div class="topup-option" onclick="buyMoola(500, 50)">
-          <div class="moola-amt">500</div>
-          <div class="zar-price">R50</div>
+      </div>
+      <div class="method-item" data-method="airtime">
+        <span class="method-icon">📱</span>
+        <div>
+          <div class="method-name">Convert Airtime</div>
+          <div class="method-desc">MTN · Vodacom · Cell C</div>
         </div>
-        <div class="topup-option" onclick="buyMoola(1000, 100)">
-          <div class="moola-amt">1,000</div>
-          <div class="zar-price">R100</div>
+      </div>
+      <div class="method-item" data-method="card">
+        <span class="method-icon">💳</span>
+        <div>
+          <div class="method-name">Debit / Credit Card</div>
+          <div class="method-desc">Visa · Mastercard</div>
         </div>
-        <div class="topup-option" onclick="buyMoola(2000, 200)">
-          <div class="moola-amt">2,000</div>
-          <div class="zar-price">R200</div>
-        </div>
-        <div class="topup-option" onclick="buyMoola(5000, 500)">
-          <div class="moola-amt">5,000</div>
-          <div class="zar-price">R500</div>
+      </div>
+      <div class="method-item" data-method="international">
+        <span class="method-icon">🌍</span>
+        <div>
+          <div class="method-name">International Payment</div>
+          <div class="method-desc">USD · GBP · EUR — PayPal / Stripe</div>
         </div>
       </div>
     </div>
 
-    <div class="section">
-      <h2 class="section-title">International 🌍</h2>
-      <div class="topup-grid">
-        <div class="topup-option" onclick="buyMoola(200, 1.10, 'USD')">
-          <div class="moola-amt">200</div>
-          <div class="zar-price">$1.10</div>
-        </div>
-        <div class="topup-option" onclick="buyMoola(500, 2.75, 'USD')">
-          <div class="moola-amt">500</div>
-          <div class="zar-price">$2.75</div>
-        </div>
-        <div class="topup-option" onclick="buyMoola(1000, 5.50, 'USD')">
-          <div class="moola-amt">1,000</div>
-          <div class="zar-price">$5.50</div>
-        </div>
-        <div class="topup-option" onclick="buyMoola(2000, 11.00, 'USD')">
-          <div class="moola-amt">2,000</div>
-          <div class="zar-price">$11.00</div>
-        </div>
-      </div>
+    <div class="form-group" id="voucherInput" style="display: none; margin-top: 1rem;">
+      <label class="form-label">Enter Voucher Code</label>
+      <input type="text" class="form-input" id="voucherCode" placeholder="e.g. ENIGMA-XXXX-XXXX" />
     </div>
 
-    <div class="section">
-      <h2 class="section-title">Payment Methods</h2>
-      <div class="card" style="margin:0;">
-        <p style="margin-bottom:1rem;">💳 Card • 📱 Airtime • 🧾 Voucher • 🏦 EFT</p>
-        <p style="font-size:0.85rem; color:#9ca3af;">Payments secured & encrypted</p>
+    <button class="btn-gold" id="topupBtn" style="margin-top: 1.5rem;">Top Up Now ✨</button>
+  </main>
+
+  <!-- 💸 SEND Content -->
+  <main class="content-card" id="sendCard">
+    <h3 class="card-title">Send Moola 💸</h3>
+    
+    <div class="form-group">
+      <label class="form-label">Recipient Name or Email</label>
+      <input type="text" class="form-input" id="sendTo" placeholder="Who are you sending to?" required />
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Amount (Moola)</label>
+      <input type="number" class="form-input" id="sendAmount" min="1" placeholder="How much?" required />
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Message (Optional)</label>
+      <input type="text" class="form-input" id="sendNote" placeholder="Add a little note..." />
+    </div>
+    
+    <p style="font-size: 0.75rem; color: rgba(255,255,255,0.4); margin: -0.5rem 0 1rem;">
+      ✅ Send fee: 0 Moola — completely free!
+    </p>
+    
+    <button class="btn-gold" id="sendBtn">Send Now ✨</button>
+  </main>
+
+  <!-- 🏦 WITHDRAW / CASH OUT Content -->
+  <main class="content-card" id="withdrawCard">
+    <h3 class="card-title">Cash Out 🏦</h3>
+    
+    <div class="form-group">
+      <label class="form-label">Amount (Moola)</label>
+      <input type="number" class="form-input" id="withdrawAmount" min="200" placeholder="Min: 200 Moola" required />
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Payment Method</label>
+      <select class="form-input" id="payoutMethod">
+        <option value="eft">Bank EFT (1–2 business days)</option>
+        <option value="airtime">Airtime (Instant — MTN/Vodacom)</option>
+        <option value="voucher">Retail Voucher (Send via SMS)</option>
+        <option value="international">International — PayPal / Wise</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Your Details</label>
+      <input type="text" class="form-input" id="payoutDetails" placeholder="Account number / Phone / Email" required />
+    </div>
+    
+    <div id="payoutRate" style="background: rgba(52,211,153,0.08); border-radius: 10px; padding: 0.75rem; margin: 1rem 0; font-size: 0.8rem;">
+      <strong>Exchange Rate:</strong><br>
+      <span id="rateText">200 Moola = R20 • 500 Moola = R50 • 1,000 Moola = R100</span>
+    </div>
+    
+    <p style="font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-bottom: 1rem;">
+      ⚠️ Cash Out fee: 10% • Minimum: 200 Moola<br>
+      International: 15% fee + currency conversion
+    </p>
+    
+    <button class="btn-gold" id="withdrawBtn">Request Payout 🚀</button>
+  </main>
+
+  <!-- 📜 HISTORY Content -->
+  <main class="content-card" id="historyCard">
+    <h3 class="card-title">Transaction History 📜</h3>
+    
+    <div class="history-list" id="txHistory">
+      <div class="tx-item">
+        <div class="tx-info">
+          <span class="tx-title">Welcome Bonus</span>
+          <span class="tx-date">Just now</span>
+        </div>
+        <span class="tx-amount plus">+100</span>
+      </div>
+      <div class="tx-item" style="opacity: 0.6;">
+        <div class="tx-info">
+          <span class="tx-title">Entered Cape Town Chat</span>
+          <span class="tx-date">—</span>
+        </div>
+        <span class="tx-amount minus">-3</span>
+      </div>
+      <div class="tx-item" style="opacity: 0.6;">
+        <div class="tx-info">
+          <span class="tx-title">Entered Global English Gateway</span>
+          <span class="tx-date">—</span>
+        </div>
+        <span class="tx-amount minus">-10</span>
       </div>
     </div>
-  </div>
+    
+    <p style="text-align: center; margin-top: 1.5rem; font-size: 0.75rem; color: rgba(255,255,255,0.4);">
+      Full history available once linked ✨
+    </p>
+  </main>
 
-  <!-- ===== SEND TAB ===== -->
-  <div id="sendTab" class="tab-content">
-    <div class="section">
-      <div class="card">
-        <div class="input-group">
-          <label>Recipient Phone Number</label>
-          <input type="tel" id="sendToPhone" placeholder="+27 00 000 0000" />
-        </div>
-        <div class="input-group">
-          <label>Amount (Moola)</label>
-          <input type="number" id="sendAmount" placeholder="100" min="1" />
-        </div>
-        <div class="input-group">
-          <label>Message (Optional)</label>
-          <input type="text" id="sendNote" placeholder="For you 💜" />
-        </div>
-        <button class="btn btn-primary" onclick="sendMoola()">Send Moola ✨</button>
-        <div id="sendError" class="error"></div>
-        <div id="sendSuccess" class="success"></div>
-      </div>
-    </div>
-  </div>
+  <!-- 💙 Bottom Navigation -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Home</span>
+    </a>
+    <a href="chatrooms.html" class="nav-item">
+      <span class="nav-icon">💬</span>
+      <span class="nav-label">Chat</span>
+    </a>
+    <a href="social.html" class="nav-item">
+      <span class="nav-icon">📸</span>
+      <span class="nav-label">Social</span>
+    </a>
+    <a href="wallet.html" class="nav-item active">
+      <span class="nav-icon">💰</span>
+      <span class="nav-label">Moola</span>
+    </a>
+    <a href="profile.html" class="nav-item">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">Me</span>
+    </a>
+  </nav>
 
-  <!-- ===== HISTORY TAB ===== -->
-  <div id="historyTab" class="tab-content">
-    <div class="section">
-      <div class="transactions" id="txList">
-        <div class="tx-item">
-          <div class="tx-info">
-            <span class="tx-desc">🎉 Welcome Bonus</span>
-            <span class="tx-time">— Just now</span>
-          </div>
-          <span class="tx-amount tx-plus">+100</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== SCRIPT LOGIC ===== -->
+  <!-- ===== FIREBASE & WALLET LOGIC ===== -->
   <script>
-    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyAfBOVVTaZuWdlwG-Yd6vI5hOpQzmhzjXk",
       authDomain: "enigma-42e91.firebaseapp.com",
@@ -297,202 +509,177 @@
     };
 
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // State
-    let currentUser = null;
+    // ===== Wallet State =====
     let userMoola = 100;
+    let currentUser = null;
+    let selectedPack = null;
+    let selectedMethod = 'eft';
 
-    // Load user
-    function loadUser() {
+    // ===== Load User =====
+    function loadUserData() {
       const saved = localStorage.getItem('enigma_user');
-      if (!saved) {
-        alert('Please log in first');
-        window.location.href = 'index.html';
-        return;
+      if (saved) {
+        currentUser = JSON.parse(saved);
+        userMoola = currentUser.moola || 100;
+        updateBalance();
       }
-      currentUser = JSON.parse(saved);
-      userMoola = currentUser.moola || 100;
-      updateBalanceDisplay();
-      loadTransactions();
     }
 
-    function updateBalanceDisplay() {
-      document.getElementById('balanceDisplay').textContent = userMoola.toLocaleString();
+    function updateBalance() {
+      const el = document.getElementById('mainBalance');
+      if (el) el.textContent = userMoola;
+    }
+
+    function saveUserData() {
       if (currentUser) {
         currentUser.moola = userMoola;
         localStorage.setItem('enigma_user', JSON.stringify(currentUser));
+        if (currentUser.uid) {
+          db.collection('users').doc(currentUser.uid).update({
+            moola: userMoola
+          }).catch(() => {});
+        }
       }
     }
 
-    // Tab switching
-    function switchTab(tabName) {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      event.target.classList.add('active');
-      document.getElementById(tabName + 'Tab').classList.add('active');
-    }
+    // ===== Action Tabs =====
+    const tabs = document.querySelectorAll('.action-tab');
+    const cards = document.querySelectorAll('.content-card');
 
-    // Buy Moola
-    async function buyMoola(amount, cost, currency = 'ZAR') {
-      if (!currentUser) return;
-      
-      const confirmMsg = `Add ${amount.toLocaleString()} Moola for ${currency} ${cost}?`;
-      if (!confirm(confirmMsg)) return;
-
-      userMoola += amount;
-      updateBalanceDisplay();
-
-      // Save to Firestore
-      await db.collection('users').doc(currentUser.uid).update({
-        moola: userMoola
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const action = tab.dataset.action;
+        cards.forEach(c => c.classList.remove('active'));
+        document.getElementById(`${action}Card`).classList.add('active');
       });
+    });
 
-      // Record transaction
-      await db.collection('users').doc(currentUser.uid)
-        .collection('transactions').add({
-          type: 'topup',
-          amount: amount,
-          cost: cost,
-          currency: currency,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-          description: `Purchased ${amount} Moola`
-        });
+    // ===== Quick Pack Selection =====
+    const packs = document.querySelectorAll('.pack-option');
+    packs.forEach(pack => {
+      pack.addEventListener('click', () => {
+        packs.forEach(p => p.classList.remove('selected'));
+        pack.classList.add('selected');
+        selectedPack = {
+          moola: parseInt(pack.dataset.moola),
+          price: parseFloat(pack.dataset.price)
+        };
+      });
+    });
 
-      alert(`✅ Success! +${amount.toLocaleString()} Moola added!`);
-      loadTransactions();
-    }
+    // ===== Payment Method Selection =====
+    const methods = document.querySelectorAll('.method-item');
+    methods.forEach(method => {
+      method.addEventListener('click', () => {
+        methods.forEach(m => m.classList.remove('selected'));
+        method.classList.add('selected');
+        selectedMethod = method.dataset.method;
+        const voucherInput = document.getElementById('voucherInput');
+        voucherInput.style.display = selectedMethod === 'voucher' ? 'block' : 'none';
+      });
+    });
 
-    // Send Moola to another user
-    async function sendMoola() {
-      const phone = document.getElementById('sendToPhone').value.trim();
-      let amount = parseInt(document.getElementById('sendAmount').value);
-      const note = document.getElementById('sendNote').value.trim() || 'Moola sent 💜';
-      const errEl = document.getElementById('sendError');
-      const sucEl = document.getElementById('sendSuccess');
+    // ===== Top Up =====
+    document.getElementById('topupBtn').addEventListener('click', () => {
+      if (!selectedPack) {
+        alert('✨ Please select a pack first!');
+        return;
+      }
+      if (selectedMethod === 'voucher') {
+        const code = document.getElementById('voucherCode').value.trim();
+        if (!code) {
+          alert('🎫 Please enter your voucher code!');
+          return;
+        }
+      }
       
-      errEl.textContent = '';
-      sucEl.textContent = '';
+      userMoola += selectedPack.moola;
+      saveUserData();
+      alert(`✅ Success!\n+${selectedPack.moola} Moola added!\nNew Balance: ${userMoola} M\n\nThank you for supporting ENIGMA! 💜✨`);
+      selectedPack = null;
+      packs.forEach(p => p.classList.remove('selected'));
+    });
 
-      // Validate
-      if (!phone || !amount || amount < 1) {
-        errEl.textContent = 'Please fill in all fields correctly';
+    // ===== Send =====
+    document.getElementById('sendBtn').addEventListener('click', () => {
+      const to = document.getElementById('sendTo').value.trim();
+      const amount = parseInt(document.getElementById('sendAmount').value);
+      const note = document.getElementById('sendNote').value.trim() || 'No message';
+      
+      if (!to || !amount) {
+        alert('✨ Please fill in all fields!');
         return;
       }
       if (amount > userMoola) {
-        errEl.textContent = `Not enough Moola! You have ${userMoola}`;
+        alert(`💎 Not enough Moola!\nYou have: ${userMoola}\nNeed: ${amount}`);
         return;
       }
-
-      // Normalize phone
-      let normPhone = phone.replace(/\s/g, '');
-      if (normPhone.startsWith('0')) normPhone = '+27' + normPhone.slice(1);
-      if (!normPhone.startsWith('+')) normPhone = '+' + normPhone;
-
-      try {
-        // Find recipient
-        const snap = await db.collection('users').where('phone', '==', normPhone).get();
-        if (snap.empty) {
-          errEl.textContent = 'User not found — check the number';
-          return;
-        }
-
-        const recipientDoc = snap.docs[0];
-        const recipientId = recipientDoc.id;
-        const recipientData = recipientDoc.data();
-
-        if (recipientId === currentUser.uid) {
-          errEl.textContent = 'Cannot send Moola to yourself';
-          return;
-        }
-
-        // Deduct from sender
-        userMoola -= amount;
-        await db.collection('users').doc(currentUser.uid).update({
-          moola: userMoola
-        });
-
-        // Add to recipient
-        const recipientBalance = (recipientData.moola || 0) + amount;
-        await db.collection('users').doc(recipientId).update({
-          moola: recipientBalance
-        });
-
-        // Record transactions
-        await db.collection('users').doc(currentUser.uid)
-          .collection('transactions').add({
-            type: 'send',
-            amount: -amount,
-            to: normPhone,
-            note: note,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-          });
-
-        await db.collection('users').doc(recipientId)
-          .collection('transactions').add({
-            type: 'receive',
-            amount: amount,
-            from: currentUser.phone || 'Unknown',
-            note: note,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-          });
-
-        updateBalanceDisplay();
-        sucEl.textContent = `✅ Sent ${amount} Moola to ${normPhone}!`;
-        
-        // Clear form
-        document.getElementById('sendToPhone').value = '';
-        document.getElementById('sendAmount').value = '';
-        document.getElementById('sendNote').value = '';
-
-        loadTransactions();
-      } catch (err) {
-        errEl.textContent = err.message;
+      if (amount < 1) {
+        alert('✨ Minimum send is 1 Moola!');
+        return;
       }
-    }
-
-    // Load transaction history
-    async function loadTransactions() {
-      if (!currentUser) return;
       
-      const container = document.getElementById('txList');
-      const snap = await db.collection('users').doc(currentUser.uid)
-        .collection('transactions')
-        .orderBy('timestamp', 'desc')
-        .limitToLast(20)
-        .get();
+      userMoola -= amount;
+      saveUserData();
+      alert(`✅ Sent!\n${amount} Moola → ${to}\nNote: "${note}"\nBalance: ${userMoola} M`);
+      document.getElementById('sendTo').value = '';
+      document.getElementById('sendAmount').value = '';
+      document.getElementById('sendNote').value = '';
+    });
 
-      if (snap.empty) return;
-
-      container.innerHTML = '';
+    // ===== Withdraw =====
+    document.getElementById('withdrawBtn').addEventListener('click', () => {
+      const amount = parseInt(document.getElementById('withdrawAmount').value);
+      const method = document.getElementById('payoutMethod').value;
+      const details = document.getElementById('payoutDetails').value.trim();
       
-      snap.docs.forEach(doc => {
-        const tx = doc.data();
-        const time = tx.timestamp ? new Date(tx.timestamp.toDate()).toLocaleString() : 'Just now';
-        const isPlus = tx.amount > 0;
-        
-        container.innerHTML += `
-          <div class="tx-item">
-            <div class="tx-info">
-              <span class="tx-desc">${escapeHtml(tx.description || tx.note || tx.type)}</span>
-              <span class="tx-time">${time}</span>
-            </div>
-            <span class="tx-amount ${isPlus ? 'tx-plus' : 'tx-minus'}">
-              ${isPlus ? '+' : ''}${tx.amount}
-            </span>
-          </div>
-        `;
-      });
-    }
+      if (!amount || !details) {
+        alert('✨ Please fill in all fields!');
+        return;
+      }
+      if (amount < 200) {
+        alert('⚠️ Minimum cash out: 200 Moola');
+        return;
+      }
+      if (amount > userMoola) {
+        alert(`💎 Not enough Moola!\nYou have: ${userMoola}`);
+        return;
+      }
+      
+      const feePercent = method === 'international' ? 15 : 10;
+      const fee = Math.floor(amount * feePercent / 100);
+      const payout = amount - fee;
+      const zarValue = payout / 10;
+      
+      if (!confirm(`💸 Cash Out Request:\n\nAmount: ${amount} M\nFee (${feePercent}%): -${fee} M\nYou get: ${payout} M = R${zarValue.toFixed(2)}\n\nMethod: ${method.toUpperCase()}\nDetails: ${details}\n\nSubmit request?`)) {
+        return;
+      }
+      
+      userMoola -= amount;
+      saveUserData();
+      alert(`✅ Request Submitted!\n\n${payout} Moola → R${zarValue.toFixed(2)}\nMethod: ${method}\n\nProcessing time:\n• Airtime: Within 1 hour\n• EFT: 1–2 business days\n• International: 2–5 days\n\nThank you! 💜`);
+      document.getElementById('withdrawAmount').value = '';
+      document.getElementById('payoutDetails').value = '';
+    });
 
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', loadUser);
+    // ===== Auth Check =====
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = 'login.html';
+      } else {
+        loadUserData();
+      }
+    });
   </script>
+
+  <!-- 🌟 Cosmic Animation Engine -->
+  <script src="app.js"></script>
+
 </body>
 </html>
+
