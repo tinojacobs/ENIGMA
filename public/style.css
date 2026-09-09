@@ -1,0 +1,328 @@
+/* ==========================================================================
+   ENIGMA — Global Cyber-Neon Styles
+   ========================================================================== */
+
+:root {
+  --purple: #a855f7;
+  --purple-dark: #7c3aed;
+  --violet: #8b5cf6;
+  --pink: #ec4899;
+  --cyan: #06b6d4;
+  --green: #10b981;
+  --gold: #f59e0b;
+  --red: #ef4444;
+  --bg: #05050d;
+  --bg-light: #0f0f1f;
+  --bg-card: rgba(15, 15, 31, 0.85);
+  --text: #e0e0ea;
+  --text-muted: #9ca3af;
+  --border: rgba(168, 85, 247, 0.2);
+  --glow: 0 0 20px rgba(168, 85, 247, 0.4), 0 0 40px rgba(168, 85, 247, 0.2);
+  --glow-strong: 0 0 30px rgba(168, 85, 247, 0.6), 0 0 60px rgba(236, 72, 153, 0.3);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* --- Header --- */
+header {
+  background: rgba(5, 5, 13, 0.7);
+  backdrop-filter: blur(12px);
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 2px;
+}
+
+/* --- Main Layout --- */
+.main-content {
+  padding: 2rem 1.5rem;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* --- Cards --- */
+.card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--glow);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glow-strong);
+}
+
+h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: white;
+}
+
+/* --- Inputs --- */
+.input-group {
+  margin-bottom: 1.25rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.25);
+}
+
+/* --- Buttons --- */
+.btn {
+  width: 100%;
+  padding: 0.9rem;
+  border-radius: 10px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+  color: white;
+  box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(168, 85, 247, 0.5);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--purple);
+  bor
+
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold), #d97706);
+  color: white;
+}
+
+.btn-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+}
+
+/* --- Links & Helpers --- */
+.link {
+  text-align: center;
+  margin-top: 1rem;
+  color: var(--purple);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+
+.link:hover {
+  text-decoration: underline;
+  color: var(--pink);
+}
+
+.hidden { display: none !important; }
+.error { color: var(--red); font-size: 0.85rem; margin-top: 0.5rem; }
+.success { color: var(--green); font-size: 0.85rem; margin-top: 0.5rem; }
+
+/* --- Chat Rooms List --- */
+.room-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.room-item {
+  padding: 1rem;
+  background: rgba(168, 85, 247, 0.08);
+  border-radius: 12px;
+  border: 1px solid rgba(168, 85, 247, 0.15);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.room-item:hover {
+  background: rgba(168, 85, 247, 0.15);
+  transform: translateX(4px);
+  border-color: var(--purple);
+}
+
+.room-name {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.room-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.room-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.badge-premium {
+  background: linear-gradient(135deg, #f59e0b, #ec4899);
+  color: white;
+}
+
+.badge-free {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+/* --- Chat Screen --- */
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--purple);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+  height: 60vh;
+}
+
+.message {
+  margin-bottom: 1rem;
+  max-width: 80%;
+}
+
+.message-other {
+  margin-right: auto;
+}
+
+.message-me {
+  margin-left: auto;
+  text-align: right;
+}
+
+.message-bubble {
+  padding: 0.75rem 1rem;
+  border-radius: 18px;
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+.message-me .message-bubble {
+  background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+  border-bottom-right-radius: 4px;
+}
+
+.message-other .message-bubble {
+  border-bottom-left-radius: 4px;
+}
+
+.message-sender {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.message-time {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.chat-input-area {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.chat-input-area input {
+  flex: 1;
+}
+
+.send-btn {
+  width: auto;
+  padding: 0.875rem 1.25rem;
+  border-radius: 10px;
+}
+
+/* --- Responsive --- */
+@media (max-width: 480px) {
+  .main-content { padding: 1rem; }
+  .card { padding: 1.5rem; }
+  .message { max-width: 85%; }
+}
+
