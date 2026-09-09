@@ -3,121 +3,286 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ENIGMA — The Galaxy Awaits ✨</title>
+  <title>Welcome — ENIGMA ✨</title>
 
-  <!-- ===== PWA APP MANIFEST ===== -->
+  <!-- ===== PWA & FIREBASE ===== -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#a855f7">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="ENIGMA">
-  <link rel="apple-touch-icon" href="icon-192.png">
-  <meta name="description" content="ENIGMA — Where the World Connects. Your Super App Galaxy.">
-
-  <!-- ===== FIREBASE ===== -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
-  <!-- ===== STYLES ===== -->
+  <!-- ===== STYLES — Same Cosmic System ===== -->
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Additional login-specific styles */
+    .auth-container {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+    }
+
+    .brand-mark {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .brand-sun {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 1rem;
+      background: radial-gradient(circle, rgba(251,191,36,0.9) 0%, rgba(245,158,11,0.4) 60%, transparent 75%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 40px rgba(251,191,36,0.5), 0 0 80px rgba(245,158,11,0.25);
+      animation: brandPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes brandPulse {
+      0%,100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+
+    .brand-m {
+      font-size: 3rem;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 0 20px rgba(255,255,255,0.6);
+    }
+
+    .brand-title {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, #c084fc, #22d3ee);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.25rem;
+    }
+
+    .brand-tagline {
+      color: rgba(255,255,255,0.6);
+      font-size: 0.9rem;
+      letter-spacing: 0.1em;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 400px;
+      background: rgba(18,18,60,0.7);
+      border: 1px solid rgba(168,85,247,0.35);
+      border-radius: 24px;
+      padding: 2rem 1.75rem;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.4), inset 0 0 30px rgba(168,85,247,0.08);
+    }
+
+    .auth-tabs {
+      display: flex;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 0.75rem;
+      text-align: center;
+      color: rgba(255,255,255,0.5);
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      font-weight: 600;
+    }
+
+    .auth-tab.active {
+      color: #c084fc;
+      border-bottom-color: #c084fc;
+      text-shadow: 0 0 10px rgba(192,132,252,0.4);
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.05em;
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(10,10,40,0.6);
+      border: 1px solid rgba(168,85,247,0.25);
+      border-radius: 12px;
+      padding: 0.875rem 1rem;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.25s ease;
+    }
+
+    .form-input:focus {
+      border-color: #c084fc;
+      box-shadow: 0 0 0 3px rgba(192,132,252,0.15), 0 0 20px rgba(168,85,247,0.2);
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, #a855f7, #7c3aed);
+      border: none;
+      border-radius: 12px;
+      padding: 0.95rem;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(168,85,247,0.35);
+      margin-top: 0.5rem;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px rgba(168,85,247,0.5);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      transform: none;
+      cursor: not-allowed;
+    }
+
+    .auth-note {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.4);
+    }
+
+    .auth-note a {
+      color: #22d3ee;
+      text-decoration: none;
+    }
+
+    .form-content {
+      display: none;
+    }
+
+    .form-content.active {
+      display: block;
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .error-box {
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(239,68,68,0.4);
+      border-radius: 10px;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      color: #fca5a5;
+      font-size: 0.85rem;
+      display: none;
+    }
+
+    .success-box {
+      background: rgba(34,197,94,0.15);
+      border: 1px solid rgba(34,197,94,0.4);
+      border-radius: 10px;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      color: #86efac;
+      font-size: 0.85rem;
+      display: none;
+    }
+  </style>
 </head>
+
 <body>
-  <!-- 🌟 COSMIC BACKGROUND — Stars & Nebula -->
+  <!-- 🌟 Same Cosmic Background -->
   <div class="space-bg">
     <div class="stars"></div>
     <div class="nebula"></div>
   </div>
 
-  <!-- 💰 MOOLA SUN — The Glowing Heart -->
-  <div class="moola-sun">
-    <div class="sun-glow"></div>
-    <div class="sun-inner">
-      <span class="m-letter">M</span>
-      <div class="balance-display">
-        <span class="balance-label">MOOLA</span>
-        <span class="balance-amount" id="moolaBalance">100</span>
+  <main class="auth-container">
+    <!-- ☀️ Brand Mark -->
+    <div class="brand-mark">
+      <div class="brand-sun">
+        <span class="brand-m">M</span>
       </div>
+      <h1 class="brand-title">ENIGMA</h1>
+      <p class="brand-tagline">WHERE THE WORLD CONNECTS ✨</p>
     </div>
-  </div>
 
-  <!-- 🌌 GALAXY GATEWAYS — Floating Cards -->
-  <main class="galaxy-grid">
-    
-    <!-- 💬 Chatrooms — Purple Gateway -->
-    <a href="chatrooms.html" class="gateway-card purple-glow">
-      <div class="card-icon">💬</div>
-      <h3>Chatrooms</h3>
-      <p>Meet • Connect • Global</p>
-      <div class="card-ray"></div>
-    </a>
+    <!-- 🪟 Glass Auth Card -->
+    <div class="auth-card">
+      <!-- Tabs: Login / Register -->
+      <div class="auth-tabs">
+        <div class="auth-tab active" data-tab="login">Login</div>
+        <div class="auth-tab" data-tab="register">Register</div>
+      </div>
 
-    <!-- 🛍️ TradePost — Cyan Gateway -->
-    <a href="tradepost.html" class="gateway-card cyan-glow">
-      <div class="card-icon">🛍️</div>
-      <h3>TradePost</h3>
-      <p>Buy • Sell • Earn</p>
-      <div class="card-ray"></div>
-    </a>
+      <!-- ⚠️ Messages -->
+      <div class="error-box" id="errorBox"></div>
+      <div class="success-box" id="successBox"></div>
 
-    <!-- 🎰 Spin & Win — Rainbow Gateway -->
-    <a href="games.html" class="gateway-card rainbow-glow">
-      <div class="card-icon">🎰</div>
-      <h3>Spin & Win</h3>
-      <p>Lottery • Boxes • Daily</p>
-      <div class="card-ray"></div>
-    </a>
+      <!-- 📝 Login Form -->
+      <form class="form-content active" id="loginForm">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-input" id="loginEmail" placeholder="you@example.com" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-input" id="loginPassword" placeholder="Your password" required />
+        </div>
+        <button type="submit" class="btn-primary" id="loginBtn">Enter the Galaxy ✨</button>
+      </form>
 
-    <!-- 📱 Social — Pink Gateway -->
-    <a href="social.html" class="gateway-card pink-glow">
-      <div class="card-icon">📸</div>
-      <h3>Social</h3>
-      <p>Feed • Stories • Creator Hub</p>
-      <div class="card-ray"></div>
-    </a>
+      <!-- 📝 Register Form -->
+      <form class="form-content" id="registerForm">
+        <div class="form-group">
+          <label class="form-label">Your Name</label>
+          <input type="text" class="form-input" id="regName" placeholder="What should we call you?" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-input" id="regEmail" placeholder="you@example.com" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input type="tel" class="form-input" id="regPhone" placeholder="+27 ..." required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Create Password</label>
+          <input type="password" class="form-input" id="regPassword" placeholder="At least 6 characters" required />
+        </div>
+        <button type="submit" class="btn-primary" id="registerBtn">Join the Galaxy 🚀</button>
+      </form>
 
-    <!-- 💰 Wallet — Gold Gateway -->
-    <a href="wallet.html" class="gateway-card gold-glow">
-      <div class="card-icon">💰</div>
-      <h3>Wallet</h3>
-      <p>Top Up • Send • Withdraw</p>
-      <div class="card-ray"></div>
-    </a>
-
-    <!-- 👤 Profile — Blue Gateway -->
-    <a href="profile.html" class="gateway-card blue-glow">
-      <div class="card-icon">👤</div>
-      <h3>Profile</h3>
-      <p>Ghost • Whisper • VIP</p>
-      <div class="card-ray"></div>
-    </a>
+      <p class="auth-note">
+        By continuing, you agree to our Community Guidelines.<br>
+        <a href="#">Privacy Policy</a> · <a href="#">Terms</a>
+      </p>
+    </div>
   </main>
 
-  <!-- 💙 Mxit-STYLE BOTTOM NAVIGATION -->
-  <nav class="bottom-nav">
-    <a href="index.html" class="nav-item active">
-      <span class="nav-icon">🏠</span>
-      <span class="nav-label">Home</span>
-    </a>
-    <a href="chatrooms.html" class="nav-item">
-      <span class="nav-icon">💬</span>
-      <span class="nav-label">Chat</span>
-    </a>
-    <a href="social.html" class="nav-item">
-      <span class="nav-icon">📸</span>
-      <span class="nav-label">Social</span>
-    </a>
-    <a href="wallet.html" class="nav-item">
-      <span class="nav-icon">💰</span>
-      <span class="nav-label">Moola</span>
-    </a>
-    <a href="profile.html" class="nav-item">
-      <span class="nav-icon">👤</span>
-      <span class="nav-label">Me</span>
-    </a>
-  </nav>
-
-  <!-- ===== FIREBASE & APP LOGIC ===== -->
+  <!-- ===== FIREBASE & AUTH LOGIC ===== -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAfBOVVTaZuWdlwG-Yd6vI5hOpQzmhzjXk",
@@ -134,23 +299,130 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    let currentUser = null;
+    // ===== Tab Switching =====
+    const tabs = document.querySelectorAll('.auth-tab');
+    const forms = document.querySelectorAll('.form-content');
+    const errorBox = document.getElementById('errorBox');
+    const successBox = document.getElementById('successBox');
 
-    function loadUserData() {
-      const saved = localStorage.getItem('enigma_user');
-      if (!saved) {
-        window.location.href = 'login.html';
-        return;
-      }
-      currentUser = JSON.parse(saved);
-      document.getElementById('moolaBalance').textContent = currentUser.moola || 100;
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const targetTab = tab.dataset.tab;
+        forms.forEach(f => f.classList.remove('active'));
+        document.getElementById(`${targetTab}Form`).classList.add('active');
+        hideMessages();
+      });
+    });
+
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.style.display = 'block';
+      successBox.style.display = 'none';
     }
 
-    document.addEventListener('DOMContentLoaded', loadUserData);
+    function showSuccess(msg) {
+      successBox.textContent = msg;
+      successBox.style.display = 'block';
+      errorBox.style.display = 'none';
+    }
+
+    function hideMessages() {
+      errorBox.style.display = 'none';
+      successBox.style.display = 'none';
+    }
+
+    // ===== Login Handler =====
+    document.getElementById('loginForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      hideMessages();
+      const email = document.getElementById('loginEmail').value.trim();
+      const pass = document.getElementById('loginPassword').value;
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true;
+      btn.textContent = 'Entering... ✨';
+
+      try {
+        const userCred = await auth.signInWithEmailAndPassword(email, pass);
+        const userDoc = await db.collection('users').doc(userCred.user.uid).get();
+        if (userDoc.exists) {
+          const userData = userDoc.data();
+          localStorage.setItem('enigma_user', JSON.stringify({
+            uid: userCred.user.uid,
+            name: userData.name || 'Explorer',
+            email: email,
+            moola: userData.moola || 100
+          }));
+        } else {
+          localStorage.setItem('enigma_user', JSON.stringify({
+            uid: userCred.user.uid,
+            name: 'Explorer',
+            email: email,
+            moola: 100
+          }));
+        }
+        showSuccess('Welcome back to the Galaxy! Redirecting... ✨');
+        setTimeout(() => window.location.href = 'index.html', 1200);
+      } catch (err) {
+        showError('Access denied: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Enter the Galaxy ✨';
+      }
+    });
+
+    // ===== Register Handler =====
+    document.getElementById('registerForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      hideMessages();
+      const name = document.getElementById('regName').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const phone = document.getElementById('regPhone').value.trim();
+      const pass = document.getElementById('regPassword').value;
+      const btn = document.getElementById('registerBtn');
+      btn.disabled = true;
+      btn.textContent = 'Joining... 🚀';
+
+      try {
+        const userCred = await auth.createUserWithEmailAndPassword(email, pass);
+        const uid = userCred.user.uid;
+        await db.collection('users').doc(uid).set({
+          name: name,
+          email: email,
+          phone: phone,
+          moola: 100,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          status: 'active'
+        });
+        localStorage.setItem('enigma_user', JSON.stringify({
+          uid: uid,
+          name: name,
+          email: email,
+          phone: phone,
+          moola: 100
+        }));
+        showSuccess('Welcome to ENIGMA, ' + name + '! Redirecting... 🌟');
+        setTimeout(() => window.location.href = 'index.html', 1500);
+      } catch (err) {
+        showError('Registration failed: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Join the Galaxy 🚀';
+      }
+    });
+
+    // ===== Auto-redirect if already logged in =====
+    auth.onAuthStateChanged(user => {
+      if (user && window.location.pathname.includes('login.html') && !window.location.pathname.includes('index.html')) {
+        window.location.href = 'index.html';
+      }
+    });
   </script>
 
-  <!-- 🌟 COSMIC ANIMATION ENGINE -->
+  <!-- 🌟 Same Cosmic Animation Engine -->
   <script src="app.js"></script>
 
 </body>
 </html>
+
