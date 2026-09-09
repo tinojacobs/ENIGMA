@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ENIGMA — Where the World Connects</title>
+
+  <!-- PWA App Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#a855f7">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <!-- Three.js for 3D Background -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/postprocessing/EffectComposer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/postprocessing/RenderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/postprocessing/ShaderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/shaders/FXAAShader.js"></script>
+
+  <!-- Socket.IO -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    :root {
+      --purple: #a855f7;
+      --purple-dark: #7c3aed;
+      --violet: #8b5cf6;
+      --pink: #ec4899;
+      --cyan: #06b6d4;
+      --green: #10b981;
+      --bg: #05050d;
+      --bg-light: #0f0f1f;
+      --bg-card: rgba(15, 15, 31, 0.85);
+      --text: #e0e0ea;
+      --text-muted: #9ca3af;
+      --glow: 0 0 20px rgba(168, 85, 247, 0.4), 0 0 40px rgba(168, 85, 247, 0.2);
+      --glow-strong: 0 0 30px rgba(168, 85, 247, 0.6), 0 0 60px rgba(236, 72, 153, 0.3);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    #canvas3d {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .app-container {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: rgba(5, 5, 13, 0.7);
+      backdrop-filter: blur(12px);
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 2px;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 2rem 1.5rem;
+      max-width: 500px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid rgba(168, 85, 247, 0.2);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--glow);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--glow-strong);
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      color: white;
+    }
+
+    .input-group {
+      margin-bottom: 1.25rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border-radius: 10px;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      background: rgba(0, 0, 0, 0.3);
+      color: white;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    input:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.25);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 0.9rem;
+      border-radius: 10px;
+      border: none;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+      color: white;
+      box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(168, 85, 247, 0.5);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--purple);
+      border: 1px solid var(--purple);
+      margin-top: 0.75rem;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(168, 85, 247, 0.1);
+    }
+
+    .link {
+      text-align: center;
+      margin-top: 1rem;
+      color: var(--purple);
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+
+    .hidden { display: none !important; }
+    .error { color: #ef4444; font-size: 0.85rem; margin-top: 0.5rem; }
+    .success { color: var(--green); font-size: 0.85rem; margin-top: 0.5rem; }
+  </style>
+</head>
+
+<body>
+  <!-- 3D Background Canvas -->
+  <canvas id="canvas3d"></canvas>
+
+  <div class="app-container">
+    <header>
+      <h1 class="logo">ENIGMA</h1>
+    </header>
+
+    <main class="main-content">
+      
+      <!-- ===== LOGIN SCREEN ===== -->
+      <div id="loginScreen" class="card">
+        <h2>Welcome Back ✨</h2>
+        
+        <div class="input-group">
+          <label>Phone Number</label>
+          <input type="tel" id="loginPhone" placeholder="+27 00 000 0000" />
+        </div>
+
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" id="loginPassword" placeholder="Enter your password" />
+        </div>
+
+        <button class="btn btn-primary" onclick="handleLogin()">Sign In</button>
+        <div id="loginError" class="error"></div>
+
+        <p class="link" onclick="showRegister()">New here? Create Account</p>
+        <p class="link" onclick="showVipLogin()">✨ VIP / Premium Login</p>
+      </div>
+
+      <!-- ===== REGISTER SCREEN ===== -->
+      <div id="registerScreen" class="card hidden">
+        <h2>Join ENIGMA 🌍</h2>
+        
+        <div class="input-group">
+          <label>Your Name</label>
+          <input type="text" id="regName" placeholder="Your display name" />
+        </div>
+
+        <div class="input-group">
+          <label>Phone Number</label>
+          <input type="tel" id="regPhone" placeholder="+27 00 000 0000" />
+        </div>
+
+        <div class="input-group">
+          <label>Create Password</label>
+          <input type="password" id="regPassword" placeholder="At least 6 characters" />
+        </div>
+
+        <div class="input-group">
+          <label>Country / Region</label>
+          <input type="text" id="regCountry" value="South Africa" />
+        </div>
+
+        <button class="btn btn-primary" onclick="handleRegister()">Send Verification Code</button>
+        <div id="regError" class="error"></div>
+
+        <p class="link" onclick="showLogin()">Already have an account? Sign In</p>
+      </div>
+
+      <!-- ===== OTP VERIFICATION SCREEN ===== -->
+      <div id="otpScreen" class="card hidden">
+        <h2>Verify Your Number 🔐</h2>
+        <p style="text-align:center; color:var(--text-muted); margin-bottom:1.5rem;">We sent a code to your phone</p>
+        
+        <div class="input-group">
+          <label>6-Digit Code</label>
+          <input type="text" id="otpCode" placeholder="000000" maxlength="6" />
+        </div>
+
+        <button class="btn btn-primary" onclick="verifyOtp()">Verify & Activate</button>
+        <div id="otpError" class="error"></div>
+        <div id="otpSuccess" class="success"></div>
+
+        <p class="link" onclick="resendOtp()">Resend Code</p>
+        <p class="link" onclick="showLogin()">Back to Sign In</p>
+      </div>
+
+      <!-- ===== VIP LOGIN SCREEN ===== -->
+      <div id="vipScreen" class="card hidden">
+        <h2>✨ VIP Premium Access ✨</h2>
+        <p style="text-align:center; color:var(--text-muted); margin-bottom:1.5rem;">Exclusive features & priority access</p>
+        
+        <div class="input-group">
+          <label>VIP Phone / Email</label>
+          <input type="text" id="vipId" placeholder="Your registered ID" />
+        </div>
+
+        <div class="input-group">
+          <label>VIP Key</label>
+          <input type="password" id="vipKey" placeholder="Your premium key" />
+        </div>
+
+        <button class="btn btn-primary" style="background:linear-gradient(135deg, #f59e0b, #ec4899);" onclick="handleVipLogin()">Enter VIP Zone</button>
+        <div id="vipError" class="error"></div>
+
+        <p class="link" onclick="showLogin()">← Back to Standard Login</p>
+      </div>
+
+      <!-- ===== MAIN APP HUB ===== -->
+      <div id="hubScreen" class="hidden">
+        <div class="card" style="text-align:center;">
+          <h2>Welcome to ENIGMA 💜</h2>
+          <p style="color:var(--text-muted); margin-bottom:1.5rem;" id="userGreeting">Connecting you to the world...</p>
+          
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
+            <button class="btn btn-primary" style="padding:1.2rem;" onclick="goToChat()">
+              💬 Global Chat
+            </button>
+            <button class="btn btn-primary" style="padding:1.2rem; background:linear-gradient(135deg, #06b6d4, #10b981);" onclick="goToSocial()">
+              📸 Social
+            </button>
+            <button class="btn btn-primary" style="padding:1.2rem; background:linear-gradient(135deg, #f59e0b, #ef4444);" onclick="goToTradePost()">
+              🛍️ TradePost
+            </button>
+            <button class="btn btn-primary" style="padding:1.2rem; background:linear-gradient(135deg, #8b5cf6, #ec4899);" onclick="goToWallet()">
+              💰 Moola Wallet
+            </button>
+          </div>
+
+          <button class="btn btn-secondary" onclick="handleLogout()">Sign Out</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ===== FIREBASE & APP LOGIC ===== -->
+  <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAfBOVVTaZuWdlwG-Yd6vI5hOpQzmhzjXk",
+      authDomain: "enigma-42e91.firebaseapp.com",
+      databaseURL: "https://enigma-42e91-default-rtdb.firebaseio.com",
+      projectId: "enigma-42e91",
+      storageBucket: "enigma-42e91.firebasestorage.app",
+      messagingSenderId: "539411208616",
+      appId: "1:539411208616:web:16f1f466166a5a5e29e59d",
+      measurementId: "G-PN66LVMMW8"
+    };
+
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Current user state
+    let currentUser = null;
+    let verificationId = null;
+
+    // ===== SCREEN SWITCHING =====
+    function hideAllScreens() {
+      ['loginScreen','registerScreen','otpScreen','vipScreen','hubScreen'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+    }
+
+    function showLogin() { hideAllScreens(); document.getElementById('loginScreen').classList.remove('hidden'); }
+    function showRegister() { hideAllScreens(); document.getElementById('registerScreen').classList.remove('hidden'); }
+    function showVipLogin() { hideAllScreens(); document.getElementById('vipScreen').classList.remove('hidden'); }
+    function showOtp() { hideAllScreens(); document.getElementById('otpScreen').classList.remove('hidden'); }
+    function showHub() { hideAllScreens(); document.getElementById('hubScreen').classList.remove('hidden'); }
+
+    // ===== LOGIN HANDLER =====
+    async function handleLogin() {
+      const phone = document.getElementById('loginPhone').value.trim();
+      const pass = document.getElementById('loginPassword').value;
+      const errEl = document.getElementById('loginError');
+      errEl.textContent = '';
+
+      if (!phone || !pass) {
+        errEl.textContent = 'Please fill in all fields';
+        return;
+      }
+
+      try {
+        // Normalize phone
+        let normPhone = phone.replace(/\s/g,'');
+        if (normPhone.startsWith('0')) normPhone = '+27' + normPhone.slice(1);
+        if (!normPhone.startsWith('+')) normPhone = '+' + normPhone;
+
+        // Find user by phone
+        const snap = await db.collection('users').where('phone','==',normPhone).get();
+        if (snap.empty) throw new Error('No account found with this number');
+
+        const userData = snap.docs[0].data();
+        if (userData.password !== pass) throw new Error('Incorrect password');
+
+        currentUser = { uid: snap.docs[0].id, ...userData };
+        localStorage.setItem('enigma_user', JSON.stringify(currentUser));
+        updateGreeting();
+        showHub();
+      } catch (err) {
+        errEl.textContent = err.message;
+      }
+    }
+
+    // ===== REGISTER HANDLER =====
+    async function handleRegister() {
+      const name = document.getElementById('regName').value.trim();
+      let phone = document.getElementById('regPhone').value.trim();
+      const pass = document.getElementById('regPassword').value;
+      const country = document.getElementById('regCountry').value.trim();
+      const errEl = document.getElementById('regError');
+      errEl.textContent = '';
+
+      if (!name || !phone || !pass || !country) {
+        errEl.textContent = 'Please fill in all fields';
+        return;
+      }
+      if (pass.length < 6) {
+        errEl.textContent = 'Password must be at least 6 characters';
+        return;
+      }
+
+      // Normalize phone
+      if (phone.startsWith('0')) phone = '+27' + phone.slice(1);
+      if (!phone.startsWith('+')) phone = '+' + phone;
+
+      try {
+        // Check if exists
+        const snap = await db.collection('users').where('phone','==',phone).get();
+        if (!snap.empty) throw new Error('This number is already registered');
+
+        // Store pending registration
+        sessionStorage.setItem('pendingReg', JSON.stringify({name,phone,pass,country}));
+        
+        // For now — skip OTP demo
+        await createUserAccount({name,phone,pass,country});
+      } catch (err) {
+        errEl.textContent = err.message;
+      }
+    }
+
+    async function createUserAccount(data) {
+      const {name,phone,pass,country} = data;
+      try {
+        // Create auth record
+        const userCred = await auth.createUserWithEmailAndPassword(
+          phone.replace(/[^\d+]/g,'') + '@enigma-user.app',
+          pass
+        );
+        const uid = userCred.user.uid;
+
+        // Store profile
+        await db.collection('users').doc(uid).set({
+          name, phone, password: pass, country,
+          joined: new Date(),
+          moola: 100,
+          isVip: false
+        });
+
+        currentUser = { uid, name, phone, country, moola: 100 };
+        localStorage.setItem('enigma_user', JSON.stringify(currentUser));
+        sessionStorage.removeItem('pendingReg');
+        updateGreeting();
+        showHub();
+      } catch (err) {
+        document.getElementById('regError').textContent = err.message;
+      }
+    }
+
+    function verifyOtp() {
+      // Demo mode — auto-verify
+      const pending = sessionStorage.getItem('pendingReg');
+      if (pending) {
+        createUserAccount(JSON.parse(pending));
+      }
+    }
+
+    function resendOtp() {
+      alert('Code resent! (Demo mode — auto-verified)');
+    }
+
+    function handleVipLogin() {
+      alert('VIP Zone coming soon! 💎');
+    }
+
+    function handleLogout() {
+      localStorage.removeItem('enigma_user');
+      currentUser = null;
+      auth.signOut();
+      showLogin();
+    }
+
+    function updateGreeting() {
+      if (currentUser && document.getElementById('userGreeting')) {
+        document.getElementById('userGreeting').textContent = `Hello, ${currentUser.name}! 🌍`;
+      }
+    }
+
+    // ===== NAVIGATION =====
+    function goToChat() { window.location.href = 'chatrooms.html'; }
+    function goToSocial() { window.location.href = 'social.html'; }
+    function goToTradePost() { window.location.href = 'tradepost.html'; }
+    function goToWallet() { window.location.href = 'wallet.html'; }
+
+    // ===== 3D GLOBE BACKGROUND =====
+    function init3D() {
+      const canvas = document.getElementById('canvas3d');
+      if (!canvas) return;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 3;
+
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      // Glowing Orb
+      const orbGeo = new THREE.SphereGeometry(1.2, 64, 64);
+      const orbMat = new THREE.MeshBasicMaterial({
+        color: 0xa855f7,
+        transparent: true,
+        opacity: 0.15
+      });
+      const orb = new THREE.Mesh(orbGeo, orbMat);
+      scene.add(orb);
+
+      // Inner Core
+      const coreGeo = new THREE.SphereGeometry(0.7, 48, 48);
+      const coreMat = new THREE.MeshBasicMaterial({
+        color: 0xc084fc,
+        transparent: true,
+        opacity: 0.3
+      });
+      const core = new THREE.Mesh(coreGeo, coreMat);
+      scene.add(core);
+
+      // Floating Particles
+      const particleCount = 800;
+      const pGeo = new THREE.BufferGeometry();
+      const pPos = new Float32Array(particleCount * 3);
+      const pColors = new Float32Array(particleCount * 3);
+      
+      const colors = [
+        [0.66, 0.34, 0.97], // purple
+        [0.93, 0.28, 0.60], // pink
+        [0.02, 0.71, 0.83], // cyan
+        [0.06, 0.73, 0.51]  // green
+      ];
+
+      for (let i = 0; i < particleCount * 3; i += 3) {
+        const r = 1.5 + Math.random() * 1.5;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos((Math.random() * 2) - 1);
+        
+        pPos[i]     = r * Math.sin(phi) * Math.cos(theta);
+        pPos[i + 1] = r * Math.sin(phi) * Math.sin(theta);
+        pPos[i + 2] = r * Math.cos(phi);
+
+        const c = colors[Math.floor(Math.random() * colors.length)];
+        pColors[i]     = c[0];
+        pColors[i + 1] = c[1];
+        pColors[i + 2] = c[2];
+      }
+
+      pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+      pGeo.setAttribute('color', new THREE.BufferAttribute(pColors, 3));
+
+      const pMat = new THREE.PointsMaterial({
+        size: 0.025,
+        vertexColors: true,
+        transparent: true,
+        blending: THREE.AdditiveBlending
+      });
+
+      const particles = new THREE.Points(pGeo, pMat);
+      scene.add(particles);
+
+      // Animation
+      function animate() {
+        requestAnimationFrame(animate);
+        
+        orb.rotation.y += 0.002;
+        core.rotation.y += 0.003;
+        particles.rotation.y += 0.001;
+        particles.rotation.x += 0.0005;
+
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      // Resize
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    }
+
+    // ===== ON PAGE LOAD =====
+    document.addEventListener('DOMContentLoaded', () => {
+      // Restore session
+      const saved = localStorage.getItem('enigma_user');
+      if (saved) {
+        currentUser = JSON.parse(saved);
+        updateGreeting();
+        showHub();
+      } else {
+        showLogin();
+      }
+
+      // Start 3D background
+      setTimeout(init3D, 100);
+    });
+  </script>
+
+
+
+
+
+
+
